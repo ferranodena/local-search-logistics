@@ -1,137 +1,144 @@
 import random
 from typing import List
 
-DISTRIBUCION_PETICIONES = [0.05, 0.65, 0.25, 0.05]
-DISTRIBUCION_DIAS = [0.60, 0.20, 0.15, 0.05]
+
+DISTRIBUCIO_PETICIONS = [0.05, 0.65, 0.25, 0.05]
+DISTRIBUCIO_DIES = [0.60, 0.20, 0.15, 0.05]
 
 
 class Gasolinera(object):
     """
-    Estructura de datos de una gasolinera
+    Estructura de dades d’una gasolinera
     """
 
-    def __init__(self, cx: int, cy: int, peticiones: List[int]):
+    def __init__(self, cx: int, cy: int, peticions: List[int]):
         """
         Constructora
         :param cx: coordenada X
         :param cy: coordenada Y
-        :param peticiones: ArrayList de Integers con los días pendientes de la peticion (0= hoy)
+        :param peticions: Llista d’enters amb els dies pendents de la petició (0 = avui)
         """
         self.cx = cx
         self.cy = cy
-        self.peticiones = peticiones
+        self.peticions = peticions
 
 
-class Gasolineras(object):
+class Gasolineres(object):
     """
-    Lista de gasolineras
+    Llista de gasolineres
     """
 
-    def __init__(self, num_gasolineras: int, seed: int):
+    def __init__(self, num_gasolineres: int, seed: int):
         """
-        Genera un número de centros con una semilla aleatoria
-        :param num_gasolineras: Número de gasolineras
-        :param seed: Semilla para el generador de números aleatorios
+        Genera un nombre de gasolineres amb una llavor aleatòria
+        :param num_gasolineres: Nombre de gasolineres
+        :param seed: Llavor per al generador de nombres aleatoris
         """
         self.my_random = random.Random(seed)
-        self.gasolineras = []
-        for _ in range(num_gasolineras):
-            gasolinera = Gasolinera(self.my_random.randint(0, 99),
-                                    self.my_random.randint(0, 99),
-                                    self.genera_peticiones())
-            self.gasolineras.append(gasolinera)
+        self.gasolineres = []
+        for _ in range(num_gasolineres):
+            gasolinera = Gasolinera(
+                self.my_random.randint(0, 99),
+                self.my_random.randint(0, 99),
+                self.genera_peticions()
+            )
+            self.gasolineres.append(gasolinera)
 
-    def genera_peticiones(self) -> List[int]:
+    def genera_peticions(self) -> List[int]:
         """
-        Generamos un número de peticiones entre 0 y 3 con distribución sesgada
-        Generamos el día que lleva la peticion pendiente con otra distribución
-        sesgada
-        :return: Lista de peticiones
+        Generem un nombre de peticions entre 0 i 2 amb distribució esbiaixada.
+        Generem el dia que porta la petició pendent amb una altra distribució esbiaixada.
+        :return: Llista de peticions
         """
         pet = []
-        dice = self.my_random.random()
-        if dice < DISTRIBUCION_PETICIONES[0]:
-            num_peticiones = 0
-        elif dice < (DISTRIBUCION_PETICIONES[0] + DISTRIBUCION_PETICIONES[1]):
-            num_peticiones = 1
+        dau = self.my_random.random()
+        if dau < DISTRIBUCIO_PETICIONS[0]:
+            num_peticions = 0
+        elif dau < (DISTRIBUCIO_PETICIONS[0] + DISTRIBUCIO_PETICIONS[1]):
+            num_peticions = 1
         else:
-            num_peticiones = 2
+            num_peticions = 2
 
-        for _ in range(num_peticiones):
-            dice = self.my_random.random()
-            if dice < DISTRIBUCION_DIAS[0]:
-                num_dias = 0
-            elif dice < (DISTRIBUCION_DIAS[0] + DISTRIBUCION_DIAS[1]):
-                num_dias = 1
-            elif dice < (DISTRIBUCION_DIAS[0] + DISTRIBUCION_DIAS[1] + DISTRIBUCION_DIAS[2]):
-                num_dias = 2
+        for _ in range(num_peticions):
+            dau = self.my_random.random()
+            if dau < DISTRIBUCIO_DIES[0]:
+                num_dies = 0
+            elif dau < (DISTRIBUCIO_DIES[0] + DISTRIBUCIO_DIES[1]):
+                num_dies = 1
+            elif dau < (DISTRIBUCIO_DIES[0] + DISTRIBUCIO_DIES[1] + DISTRIBUCIO_DIES[2]):
+                num_dies = 2
             else:
-                num_dias = 3
-            pet.append(num_dias)
+                num_dies = 3
+            pet.append(num_dies)
         return pet
 
 
-class Distribucion(object):
+class Distribucio(object):
     """
-    Centro de Distribución
+    Centre de distribució
     """
 
-    def __init__(self, cx: int, cy: int):
+    def __init__(self, cx: int, cy: int, diposit: int):
         """
         Constructora
         :param cx: coordenada X
         :param cy: coordenada Y
+        :param diposit: capacitat del dipòsit
         """
         self.cx = cx
         self.cy = cy
+        self.diposit = diposit
 
 
-class CentrosDistribucion(object):
+class CentresDistribucio(object):
     """
-    Lista con los centros de distribución
+    Llista amb els centres de distribució
     """
 
-    def __init__(self, num_centros: int, multiplicidad: int, seed: int):
+    def __init__(self, num_centres: int, multiplicitat: int, seed: int):
         """
-        Genera un número de centros con una semilla aleatoria
-        Si multiplicidad es diferente de 1 genera varios centros
-        en la misma posicion para simular tener más de un camion
-        en un centro
-        :param num_centros: Número de centros
-        :param multiplicidad: Multiplicidad en la misma posicion
-        :param seed: Semilla para el generador de números aleatorios
+        Genera un nombre de centres amb una llavor aleatòria.
+        Si la multiplicitat és diferent d’1, genera diversos centres a la mateixa posició
+        per simular tenir més d’un camió en un centre.
+        :param num_centres: Nombre de centres
+        :param multiplicitat: Multiplicitat a la mateixa posició
+        :param seed: Llavor per al generador de nombres aleatoris
         """
-        self.centros = []
+        self.centres = []
         self.my_random = random.Random(seed + 1)
-        for _ in range(num_centros):
-            centro = Distribucion(self.my_random.randint(0, 99),
-                                  self.my_random.randint(0, 99))
-            for _ in range(multiplicidad):
-                self.centros.append(centro)
+        for _ in range(num_centres):
+            # Nota: ara passem una capacitat de dipòsit d’exemple, p. ex. 1000
+            centre_base = Distribucio(
+                self.my_random.randint(0, 99),
+                self.my_random.randint(0, 99),
+                1000
+            )
+            for _ in range(multiplicitat):
+                self.centres.append(centre_base)
 
 
 if __name__ == "__main__":
     """
-    Código para probar las clases
-    No tiene utilidad para la práctica
+    Codi per provar les classes
+    No té utilitat per a la pràctica
     """
-    s = Gasolineras(100, 1234)
-    c = CentrosDistribucion(10, 1, 1234)
+    s = Gasolineres(100, 1234)
+    c = CentresDistribucio(10, 1, 1234)
     histograma = [0, 0, 0, 0]
 
-    for i in range(len(s.gasolineras)):
-        print(f"Gasolinera {i}: {s.gasolineras[i].cx} {s.gasolineras[i].cy}")
+    for i in range(len(s.gasolineres)):
+        print(f"Gasolinera {i}: {s.gasolineres[i].cx} {s.gasolineres[i].cy}")
         j = 0
-        if not s.gasolineras[i].peticiones:
-            print("-> Sin peticiones <-")
-        for peticion in s.gasolineras[i].peticiones:
-            print(f"Peticion {j}: Días {peticion}")
+        if not s.gasolineres[i].peticions:
+            print("-> Sense peticions <-")
+        for peticio in s.gasolineres[i].peticions:
+            print(f"Petició {j}: Dies {peticio}")
             j += 1
-            histograma[peticion] += 1
+            histograma[peticio] += 1
 
     print()
     for i in range(4):
-        print(f"{histograma[i]} de {i} días")
+        print(f"{histograma[i]} de {i} dies")
     print()
-    for i in range(len(c.centros)):
-        print(f"Centro {i}: {c.centros[i].cx} {c.centros[i].cy}")
+    for i in range(len(c.centres)):
+        print(f"Centre {i}: {c.centres[i].cx} {c.centres[i].cy}")
