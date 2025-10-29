@@ -2,6 +2,7 @@ from camions_parametres import ProblemParameters
 from camions_operadors import CamionsOperator
 from typing import List, Set, Generator
 from abia_Gasolina import Gasolineres, Gasolinera
+from camions_operadors import swapCentres, mourePeticio
 
 
 class StateRepresentation(object):
@@ -16,7 +17,7 @@ class StateRepresentation(object):
 
         self.peticions_info = [] # dies pendents per cada petició, el índex de la llista indica el id de la petició, el valor associat a l'índex indica els dies que porta pendent la petició
         self.gasolinera_per_peticio = [] # gasolinera associada a cada petició, el índex de la llista indica el id de la petició, el valor de la llista indica la gasolinera associada
-
+        
         i_global = 0
         for id_gas, gasolinera in enumerate(params.gasolineres): # Recorrem la llista de gasolineres retornant parelles, el índex i el objecte
             for dies in gasolinera.peticions: # Per cada gasolinera, iterem sobre totes les seves peticions pendents
@@ -133,9 +134,52 @@ class StateRepresentation(object):
         """
         return abs(c1[0] - c2[0]) + abs(c1[1] - c2[1])
     
+    def _copy(self) -> 'StateRepresentation':
+        """
+        Crea una còpia profunda de l'estat actual.
+        :return: nova instància de StateRepresentation amb les mateixes dades
+        """
+        new_state = StateRepresentation(self.params)
+        new_state.peticions_info = self.peticions_info.copy()
+        new_state.gasolinera_per_peticio = self.gasolinera_per_peticio.copy()
+        new_state.camions = [viatges.copy() for viatges in self.camions]
+        new_state.peticions_servides = self.peticions_servides.copy()
+        return new_state
+
+    
+
+    def apply_action(self, action: CamionsOperator) -> 'StateRepresentation':
+        """
+        Aplica un operador a l'estat actual i retorna el nou estat resultant.
+        :param action: operador a aplicar
+        :return: nou estat després d'aplicar l'operador
+        """
+        
+        new_state = self._copy()
+
+        if isinstance(action, swapCentres):
+            c1 = action.centre1
+            c2 = action.centre2
+            new_state.camions[c1], new_state.camions[c2] = new_state.camions[c2], new_state.camions[c1]
+
+        elif isinstance(action, mourePeticio):
+            id_peticio = action.id_peticio
+            camio_origen = action.camio_origen
+            camio_desti = action.camio_desti
+
+            for viatge in new_state.camions[camio_origen]: # Accedim a la llista de camions, i del camio origen, recorrem cada viatge (peticio)
+                if id_peticio in viatge: # Si la petició està en aquest viatge
+                    viatge.remove(id_peticio) # La esborrem del viatge
+                    break
+
+            if new_state.camions[camio_desti]: # Si el camió destí ja té viatges assignats
+                new_state.camions[camio_desti][-1].append(id_peticio) # Afegim la petició al darrer viatge existent
+            else:
+                new_state.camions[camio_desti].append([id_peticio]) # Si no té viatges, creem un nou viatge amb la petició
+
+    
 
     def __eq__(self, other):
         return isinstance(other, StateRepresentation) and self.params == other.params
     
 def generate_initial_state(params: ProblemParameters) -> StateRepresentation:
-    pass
