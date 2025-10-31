@@ -25,7 +25,7 @@ class StateRepresentation(object):
                 self.gasolinera_per_peticio.append(id_gas) # Afegim la gasolinera associada a la petició
                 i_global += 1 # Incrementem el comptador global de peticions
         
-        num_camions = len(params.centres)
+        num_camions = len(params.centres.centres)
         self.camions = [[] for _ in range(num_camions)]  # Els índex de la primera llista són cada camió, les subllistes indiquen les peticions que ha de servir cada camió
 
         self.peticions_servides = set()
@@ -85,7 +85,7 @@ class StateRepresentation(object):
         Calcula els km totals d'un viatge d'un camió donat.
         Un viatge comença al centre de distribució del camió, visita les gasolineres de les peticions i torna al centre.
         """
-        coords_actuals = (self.params.centres[id_camio].cx, self.params.centres[id_camio].cy) # Les coordenades actuals del camió, comencem des del centre de distribució
+        coords_actuals = (self.params.centres.centres[id_camio].cx, self.params.centres.centres[id_camio].cy) # Les coordenades actuals del camió, comencem des del centre de distribució
         km_totals = 0.0
 
         for i_peticio in viatge:
@@ -96,7 +96,7 @@ class StateRepresentation(object):
             coords_actuals = coords_gasolinera  # Actualitzem les coordenades actuals del camió
 
         # Tornar al centre de distribució
-        coords_centre = (self.params.centres[id_camio].cx, self.params.centres[id_camio].cy) # Coordenades del centre de distribució
+        coords_centre = (self.params.centres.centres[id_camio].cx, self.params.centres.centres[id_camio].cy) # Coordenades del centre de distribució
         km_totals += self._manhattan(coords_actuals, coords_centre) # Afegim els quilòmetres per tornar al centre
 
         return km_totals # Retornem els quilòmetres totals del viatge
@@ -176,10 +176,127 @@ class StateRepresentation(object):
                 new_state.camions[camio_desti][-1].append(id_peticio) # Afegim la petició al darrer viatge existent
             else:
                 new_state.camions[camio_desti].append([id_peticio]) # Si no té viatges, creem un nou viatge amb la petició
+        return new_state
+    
+    def generate_actions(self) -> Generator[CamionsOperator, None, None]:
+        """
+        Genera tots els possibles operadors aplicables a l'estat actual.
+        :return: generador d'operadors
+        """
+        num_camions = len(self.camions)
+
+        # Generar operadors swapCentres per cada parella de centres
+        for i in range(num_camions):
+            for j in range(i + 1, num_camions):
+                yield swapCentres(i, j)
+
+        # Generar operadors mourePeticio per cada petició i camions diferents
+        for id_camio_origen in range(num_camions):
+            for viatge in self.camions[id_camio_origen]:
+                for id_peticio in viatge:
+                    for id_camio_desti in range(num_camions):
+                        if id_camio_desti != id_camio_origen:
+                            yield mourePeticio(id_peticio, id_camio_origen, id_camio_desti)
 
     
 
     def __eq__(self, other):
         return isinstance(other, StateRepresentation) and self.params == other.params
     
-def generate_initial_state(params: ProblemParameters) -> StateRepresentation:
+def generate_greedy_initial_state(params: ProblemParameters) -> StateRepresentation:
+    """
+    Assignar a cada camió les peticions més properes (de distància) fins a omplir la seva capacitat, 
+    sense tenir en compte la penalització per peticions pendents.
+    :param params: paràmetres del problema
+    :return: estat inicial generat
+    """
+    estat = StateRepresentation(params)
+
+    num_camions = len(params.centres)
+    num_peticions = len(estat.peticions_info)
+
+    for i_peticio in range(num_peticions): # Recorrem totes les peticions pel seu índex
+        id_gasolinera = estat.gasolinera_per_peticio[i_peticio] # Obtenim la gasolinera associada a la petició
+        gasolinera = params.gasolineres[id_gasolinera] # Obtenim l'objecte Gasolinera
+        coords_peticio = (gasolinera.cx, gasolinera.cy)
+
+        min_distancia = float('inf')
+        millor_camio = None
+
+        for id_camio in range(num_camions): # Recorrem cada camió pel seu índex
+            centre = params.centres[id_camio] # Obtenim l'objecte Centre de distribució
+            coords_centre = (centre.cx, centre.cy)
+            distancia = estat._manhattan(coords_peticio, coords_centre) # calculem la distància entre la petició i el centre 
+            if distancia < min_distancia : # Si la distància és menor que la mínima trobada fins ara
+                min_distancia = distancia
+                millor_camio = id_camio
+        if millor_camio is not None: # si ja tenim un camió assignat
+            if estat.camions[millor_camio]: # Si el camió ja té viatges assignats
+                estat.camions[millor_camio][-1].append(i_peticio) # Afegim la petició al darrer viatge existent
+            else:
+                estat.camions[millor_camio].append([i_peticio]) # Si no té viatges, creem un nou viatge amb la petició
+    return estat
+
+def generate_empty_initial_state(params: ProblemParameters) -> StateRepresentation:
+    """
+    Genera un estat inicial buit, sense cap petició assignada a cap camió.
+    :param params: paràmetres del problema
+    :return: estat inicial buit
+    """
+    estat = StateRepresentation(params) # Creem l'estat amb els paràmetres donats
+    return estat
+
+def generate_initial_state(parametres: ProblemParameters) -> StateRepresentation:
+    """
+    Les peticions es prioritzen segons la seva penalització potencial (pèrdua de preu per dia pendent). 
+    El camió atén primer les peticions amb la penalització més alta, sempre que estiguin dins de
+    la seva capacitat i distància. Després, si és compatible per distància i capacitat, 
+    s'assigna la petició més propera geogràficament, i en cas d'empat, la que tingui més dies pendents, 
+    i en cas d'empat, la que impliqui menys distància de retorn al centre assignat al camió. 
+    :param parametres: paràmetres del problema
+    :return: estat inicial generat
+    """
+    estat = StateRepresentation(parametres)
+
+    nombre_camions = len(parametres.centres.centres)
+    nombre_peticions = len(estat.peticions_info)
+
+    peticions_ordenades = sorted( # ordenem les peticions segons el seu factor de preu, de més alt a més baix
+        range(nombre_peticions),
+        key=lambda i: (-estat._factor_de_preu(estat.peticions_info[i]), i)
+    )
+
+    for id_peticio in peticions_ordenades: #recorrem les peticions ordenades segons la seva prioritat
+        id_gasolinera = estat.gasolinera_per_peticio[id_peticio]
+        gasolinera = parametres.gasolineres.gasolineres[id_gasolinera]
+        coordenades_peticio = (gasolinera.cx, gasolinera.cy)
+
+        millor_camio = None
+        millor_distancia = float('inf')
+        millors_dies_pendents = -1
+        millor_distancia_retor = float('inf')
+
+        for id_camio in range(nombre_camions): # Recorrem cada camió pel seu índex
+            centre = parametres.centres.centres[id_camio]
+            coordenades_centre = (centre.cx, centre.cy)
+            distancia = estat._manhattan(coordenades_peticio, coordenades_centre)
+            dies_pendents = estat.peticions_info[id_peticio]
+            distancia_retor = estat._manhattan(coordenades_peticio, coordenades_centre)
+
+            # Prioritzem segons la distància, dies pendents i distància de retorn
+
+            if (distancia < millor_distancia or
+                (distancia == millor_distancia and dies_pendents > millors_dies_pendents) or
+                (distancia == millor_distancia and dies_pendents == millors_dies_pendents and distancia_retor < millor_distancia_retor)):
+                millor_distancia = distancia
+                millors_dies_pendents = dies_pendents
+                millor_distancia_retor = distancia_retor
+                millor_camio = id_camio
+
+        if millor_camio is not None:
+            if estat.camions[millor_camio]:  # Si el camió ja té viatges assignats
+                estat.camions[millor_camio][-1].append(id_peticio)  # Afegim la petició al darrer viatge existent
+            else:
+                estat.camions[millor_camio].append([id_peticio])  # Si no té viatges, creem un nou viatge amb la petició
+
+    return estat

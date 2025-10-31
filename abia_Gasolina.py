@@ -11,7 +11,7 @@ class Gasolinera(object):
     Estructura de dades d’una gasolinera
     """
 
-    def __init__(self, cx: int, cy: int):
+    def __init__(self, cx: int, cy: int, peticions: List[int]):
         """
         Constructora
         :param cx: coordenada X
@@ -20,6 +20,7 @@ class Gasolinera(object):
         """
         self.cx = cx
         self.cy = cy
+        self.peticions = peticions
     
 
 class Gasolineres(object):
@@ -42,6 +43,9 @@ class Gasolineres(object):
                 self.genera_peticions()
             )
             self.gasolineres.append(gasolinera)
+    def __iter__(self):
+        return iter(self.gasolineres)
+
 
     def genera_peticions(self) -> List[int]:
         """
@@ -77,7 +81,7 @@ class Distribucio(object):
     Centre de distribució
     """
 
-    def __init__(self, cx: int, cy: int, diposit: int, viatges: List[tuple]):
+    def __init__(self, cx: int, cy: int, diposit: int):
         """
         Constructora
         :param cx: coordenada X
@@ -94,7 +98,6 @@ class Distribucio(object):
         la posició de la llista indica l'ordre dels viatges, 
         la mida no pot superar el nombre màxim de viatges per camió
         '''
-        self.viatges = viatges 
     
         
 
