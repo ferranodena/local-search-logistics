@@ -49,22 +49,24 @@ class StateRepresentation(object):
         return -benefici_total  # ha de ser negatiu
     
     def calcular_ingressos_servits(self) -> float:
-        """
-        Calcula el benefici perdut per les peticions no servides.
-        Sumatori de les peticions servides avui pel seu factor de preu
-        """
         ingressos = 0.0
-        # Implementar càlcul dels ingressos
-
-        for camio in self.camions: # Recorrem cada camió
-            for viatge in camio: # Recorrem cada viatge del camió
-                for i_peticio in viatge: # Recorrem cada petició del viatge
-                    dies_pendents = self.peticions_info[i_peticio] # Obtenim els dies pendents de la petició
-                    factor_preu = self._factor_de_preu(dies_pendents) # Obtenim el factor de preu segons els dies pendents
-                    ingressos += self.params.valor * factor_preu # Afegim als ingressos el valor de la petició multiplicat pel seu factor de preu
-                    self.peticions_servides.add(i_peticio) # Afegim la petició a les peticions servides avui
-
+        for camio in self.camions:
+            for viatge in camio:
+                for i_peticio in viatge:
+                    dies_pendents = self.peticions_info[i_peticio]
+                    factor_preu = self._factor_de_preu(dies_pendents)
+                    ingressos += self.params.valor * factor_preu
         return ingressos
+
+    def _get_peticions_servides(self) -> Set[int]:
+        """Retorna el conjunt de peticions servides"""
+        servides = set()
+        for camio in self.camions:
+            for viatge in camio:
+                for i_peticio in viatge:
+                    servides.add(i_peticio)
+        return servides
+
 
     def calcular_cost_km(self) -> float:
         """
@@ -104,19 +106,21 @@ class StateRepresentation(object):
     def calcular_penalitzacio_pendents(self) -> float:
         """
         Calcula la penalització per les peticions no servides avui.
-        És el sumatori de les penalitzacions no ateses el dia pel que porten pendent.
-        Cada petició pendent afegeix una penalització segons els dies que porta pendent.
+        La penalització és la suma de les pèrdues de preu per cada petició no servida.
         """
-        penalitzacio = 0.0
-        # Implementar càlcul de la penalització per peticions pendents
 
-        peticions_totals = len(self.peticions_info) # Nombre total de peticions
-        for i_peticio in range(peticions_totals): # Recorrem totes les peticions pel seu índex
-            if i_peticio not in self.peticions_servides: # Si la petició no ha estat servida avui
-                dies_pendents = self.peticions_info[i_peticio] # Obtenim els dies pendents de la petició
-                factor_preu = self._factor_de_preu(dies_pendents) # Obtenim el factor de preu segons els dies pendents
-                penalitzacio += self.params.valor * (self._factor_de_preu(0) - factor_preu) # Afegim a la penalització el valor de la petició multiplicat per la diferència del factor de preu entre 0 dies i els dies pendents
+        penalitzacio = 0.0
+        peticions_servides = self._get_peticions_servides()  # Calculem-ho aquí
+        peticions_totals = len(self.peticions_info)
+        
+        for i_peticio in range(peticions_totals):
+            if i_peticio not in peticions_servides:
+                dies_pendents = self.peticions_info[i_peticio]
+                factor_preu = self._factor_de_preu(dies_pendents)
+                penalitzacio += self.params.valor * (self._factor_de_preu(0) - factor_preu)
+        
         return penalitzacio
+
     
     def _factor_de_preu(self, dies: int) -> float: #f(d) del meu escrit :)
         """
@@ -139,11 +143,11 @@ class StateRepresentation(object):
         Crea una còpia profunda de l'estat actual.
         :return: nova instància de StateRepresentation amb les mateixes dades
         """
+
         new_state = StateRepresentation(self.params)
         new_state.peticions_info = self.peticions_info.copy()
         new_state.gasolinera_per_peticio = self.gasolinera_per_peticio.copy()
-        new_state.camions = [viatges.copy() for viatges in self.camions]
-        new_state.peticions_servides = self.peticions_servides.copy()
+        new_state.camions = [[viatge.copy() for viatge in camio] for camio in self.camions]  # Còpia profunda
         return new_state
 
     
@@ -166,22 +170,26 @@ class StateRepresentation(object):
             id_peticio = action.id_peticio
             camio_origen = action.camio_origen
             camio_desti = action.camio_desti
-
-            for viatge in new_state.camions[camio_origen]: # Accedim a la llista de camions, i del camio origen, recorrem cada viatge (peticio)
-                if id_peticio in viatge: # Si la petició està en aquest viatge
-                    viatge.remove(id_peticio) # La esborrem del viatge
+            
+            # Eliminar la petició del camió origen
+            for viatge in new_state.camions[camio_origen]:
+                if id_peticio in viatge:
+                    viatge.remove(id_peticio)
                     break
-
-            if new_state.camions[camio_desti]: # Si el camió destí ja té viatges assignats
-                if len(new_state.camions[camio_desti][-1]) < 2: # Si l'últim viatge té menys de 2 peticions
-                    new_state.camions[camio_desti][-1].append(id_peticio) # Afegim la petició al darrer viatge existent
-                elif (len(new_state.camions[camio_desti]) < self.params.n_viatges): # Si el camió pot afegir un nou viatge
-                    new_state.camions[camio_desti].append([id_peticio]) # Creem un nou viatge amb la petició
-                else:
-                    pass  # No es pot moure la petició perquè el camió destí ha arribat al límit de viatges
+            
+            # Eliminar viatges buits
+            new_state.camions[camio_origen] = [v for v in new_state.camions[camio_origen] if v]
+            
+            # Afegir al camió destí
+            if new_state.camions[camio_desti]:
+                if len(new_state.camions[camio_desti][-1]) < 2:
+                    new_state.camions[camio_desti][-1].append(id_peticio)
+                elif len(new_state.camions[camio_desti]) < self.params.n_viatges:
+                    new_state.camions[camio_desti].append([id_peticio])
             else:
-                new_state.camions[camio_desti].append([id_peticio]) # Si no té viatges, creem un nou viatge amb la petició
+                new_state.camions[camio_desti].append([id_peticio])
         return new_state
+
     
     def generate_actions(self) -> Generator[CamionsOperator, None, None]:
         """
@@ -210,35 +218,123 @@ class StateRepresentation(object):
     
     def __str__(self):
         output = []
-        output.append(f"=== ESTAT DELS CAMIONS ===\n")
-        output.append(f"Benefici total: {-self.heuristica():.2f}€\n")
-        output.append(f"Ingressos: {self.calcular_ingressos_servits():.2f}€")
-        output.append(f"Cost km: {self.calcular_cost_km():.2f}€")
-        output.append(f"Penalització: {self.calcular_penalitzacio_pendents():.2f}€\n")
+        output.append("=" * 70)
+        output.append("═══════════════════ ESTAT DELS CAMIONS ════════════════════")
+        output.append("=" * 70)
+        
+        # Resum general
+        benefici = -self.heuristica()
+        ingressos = self.calcular_ingressos_servits()
+        cost_km = self.calcular_cost_km()
+        penalitzacio = self.calcular_penalitzacio_pendents()
+        
+        output.append(f"\n💰 BENEFICI TOTAL: {benefici:.2f}€")
+        output.append(f"   ├─ Ingressos:    {ingressos:.2f}€")
+        output.append(f"   ├─ Cost km:     -{cost_km:.2f}€")
+        output.append(f"   └─ Penalització: -{penalitzacio:.2f}€")
+        
+        # Estadístiques globals
+        peticions_servides_set = self._get_peticions_servides()
+        km_totals = 0.0
         
         for id_camio, camio in enumerate(self.camions):
+            for viatge in camio:
+                km_totals += self._calcular_km_viatge(id_camio, viatge)
+        
+        output.append(f"\n📊 RESUM:")
+        output.append(f"   ├─ Peticions servides: {len(peticions_servides_set)}/{len(self.peticions_info)}")
+        output.append(f"   ├─ Peticions pendents: {len(self.peticions_info) - len(peticions_servides_set)}")
+        output.append(f"   └─ Km totals recorreguts: {km_totals:.2f} km")
+        
+        output.append("\n" + "=" * 70)
+        
+        # Detall per cada camió
+        for id_camio, camio in enumerate(self.camions):
             centre = self.params.centres.centres[id_camio]
-            output.append(f"\n--- Camió {id_camio} (Centre: {centre.cx}, {centre.cy}) ---")
+            output.append(f"\n🚚 CAMIÓ {id_camio} | Centre de Distribució: ({centre.cx}, {centre.cy})")
+            output.append("─" * 70)
             
             if not camio:
-                output.append("  Cap viatge assignat")
+                output.append("   ⚠️  Cap viatge assignat")
                 continue
-                
+            
+            km_camio = 0.0
+            cost_camio = 0.0
+            ingressos_camio = 0.0
+            
             for id_viatge, viatge in enumerate(camio):
                 km_viatge = self._calcular_km_viatge(id_camio, viatge)
-                output.append(f"  Viatge {id_viatge}: {len(viatge)} peticions, {km_viatge:.2f} km")
+                cost_viatge = km_viatge * self.params.cost_km
+                km_camio += km_viatge
+                cost_camio += cost_viatge
                 
+                # Calcular ingressos del viatge
+                ingressos_viatge = 0.0
                 for id_peticio in viatge:
+                    dies = self.peticions_info[id_peticio]
+                    factor = self._factor_de_preu(dies)
+                    ingressos_viatge += self.params.valor * factor
+                
+                ingressos_camio += ingressos_viatge
+                benefici_viatge = ingressos_viatge - cost_viatge
+                
+                output.append(f"\n   📦 VIATGE {id_viatge} | {len(viatge)} petició(s)")
+                output.append(f"      ├─ Km totals: {km_viatge:.2f} km")
+                output.append(f"      ├─ Cost viatge: {cost_viatge:.2f}€")
+                output.append(f"      ├─ Ingressos viatge: {ingressos_viatge:.2f}€")
+                output.append(f"      └─ Benefici viatge: {benefici_viatge:.2f}€")
+                
+                # Desplaçaments detallats
+                output.append(f"\n      🗺️  RUTA DEL VIATGE:")
+                coords_actuals = (centre.cx, centre.cy)
+                tram_num = 0
+                
+                for idx, id_peticio in enumerate(viatge):
                     id_gas = self.gasolinera_per_peticio[id_peticio]
                     gas = self.params.gasolineres.gasolineres[id_gas]
+                    coords_gas = (gas.cx, gas.cy)
+                    distancia_tram = self._manhattan(coords_actuals, coords_gas)
                     dies = self.peticions_info[id_peticio]
-                    output.append(f"    - Petició {id_peticio}: Gasolinera {id_gas} ({gas.cx}, {gas.cy}), {dies} dies pendents")
+                    factor = self._factor_de_preu(dies)
+                    preu = self.params.valor * factor
+                    
+                    output.append(f"         {tram_num}. Centre ({coords_actuals[0]}, {coords_actuals[1]}) "
+                                f"→ Gasolinera {id_gas} ({coords_gas[0]}, {coords_gas[1]})")
+                    output.append(f"            📏 Distància: {distancia_tram:.2f} km | "
+                                f"💵 Cost: {distancia_tram * self.params.cost_km:.2f}€")
+                    output.append(f"            📦 Petició {id_peticio}: {dies} dies pendents | "
+                                f"Factor preu: {factor:.2f} | Ingressos: {preu:.2f}€")
+                    
+                    coords_actuals = coords_gas
+                    tram_num += 1
+                
+                # Retorn al centre
+                distancia_retorn = self._manhattan(coords_actuals, (centre.cx, centre.cy))
+                output.append(f"         {tram_num}. Gasolinera ({coords_actuals[0]}, {coords_actuals[1]}) "
+                            f"→ Centre ({centre.cx}, {centre.cy})")
+                output.append(f"            📏 Distància: {distancia_retorn:.2f} km | "
+                            f"💵 Cost: {distancia_retorn * self.params.cost_km:.2f}€")
+            
+            benefici_camio = ingressos_camio - cost_camio
+            output.append(f"\n   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            output.append(f"   📊 RESUM CAMIÓ {id_camio}:")
+            output.append(f"      ├─ Km totals: {km_camio:.2f} km")
+            output.append(f"      ├─ Cost total: {cost_camio:.2f}€")
+            output.append(f"      ├─ Ingressos totals: {ingressos_camio:.2f}€")
+            output.append(f"      └─ Benefici camió: {benefici_camio:.2f}€")
         
-        peticions_no_servides = len(self.peticions_info) - len(self.peticions_servides)
-        output.append(f"\nPeticions servides: {len(self.peticions_servides)}/{len(self.peticions_info)}")
-        output.append(f"Peticions pendents: {peticions_no_servides}")
-        
+        output.append("\n" + "=" * 70)
         return "\n".join(output)
+
+    def _get_peticions_servides(self) -> Set[int]:
+        """Retorna el conjunt de peticions servides"""
+        servides = set()
+        for camio in self.camions:
+            for viatge in camio:
+                for i_peticio in viatge:
+                    servides.add(i_peticio)
+        return servides
+
 
     
 def generate_greedy_initial_state(params: ProblemParameters) -> StateRepresentation:
