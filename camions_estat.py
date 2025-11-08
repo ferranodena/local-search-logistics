@@ -54,7 +54,7 @@ class StateRepresentation(object):
         Sumatori de les peticions servides avui pel seu factor de preu
         """
         ingressos = 0.0
-        # Implementar càlcul del benefici perdut
+        # Implementar càlcul dels ingressos
 
         for camio in self.camions: # Recorrem cada camió
             for viatge in camio: # Recorrem cada viatge del camió
@@ -115,7 +115,7 @@ class StateRepresentation(object):
             if i_peticio not in self.peticions_servides: # Si la petició no ha estat servida avui
                 dies_pendents = self.peticions_info[i_peticio] # Obtenim els dies pendents de la petició
                 factor_preu = self._factor_de_preu(dies_pendents) # Obtenim el factor de preu segons els dies pendents
-                penalitzacio += self.params.valor * (factor_preu(0) - factor_preu(dies_pendents)) # Afegim a la penalització el valor de la petició multiplicat per la diferència del factor de preu entre 0 dies i els dies pendents
+                penalitzacio += self.params.valor * (self._factor_de_preu(0) - factor_preu) # Afegim a la penalització el valor de la petició multiplicat per la diferència del factor de preu entre 0 dies i els dies pendents
         return penalitzacio
     
     def _factor_de_preu(self, dies: int) -> float: #f(d) del meu escrit :)
@@ -173,7 +173,12 @@ class StateRepresentation(object):
                     break
 
             if new_state.camions[camio_desti]: # Si el camió destí ja té viatges assignats
-                new_state.camions[camio_desti][-1].append(id_peticio) # Afegim la petició al darrer viatge existent
+                if len(new_state.camions[camio_desti][-1]) < 2: # Si l'últim viatge té menys de 2 peticions
+                    new_state.camions[camio_desti][-1].append(id_peticio) # Afegim la petició al darrer viatge existent
+                elif (len(new_state.camions[camio_desti]) < self.params.n_viatges): # Si el camió pot afegir un nou viatge
+                    new_state.camions[camio_desti].append([id_peticio]) # Creem un nou viatge amb la petició
+                else:
+                    pass  # No es pot moure la petició perquè el camió destí ha arribat al límit de viatges
             else:
                 new_state.camions[camio_desti].append([id_peticio]) # Si no té viatges, creem un nou viatge amb la petició
         return new_state
@@ -245,29 +250,34 @@ def generate_greedy_initial_state(params: ProblemParameters) -> StateRepresentat
     """
     estat = StateRepresentation(params)
 
-    num_camions = len(params.centres)
+    num_camions = len(params.centres.centres)
     num_peticions = len(estat.peticions_info)
 
     for i_peticio in range(num_peticions): # Recorrem totes les peticions pel seu índex
         id_gasolinera = estat.gasolinera_per_peticio[i_peticio] # Obtenim la gasolinera associada a la petició
-        gasolinera = params.gasolineres[id_gasolinera] # Obtenim l'objecte Gasolinera
+        gasolinera = params.gasolineres.gasolineres[id_gasolinera] # Obtenim l'objecte Gasolinera
         coords_peticio = (gasolinera.cx, gasolinera.cy)
 
         min_distancia = float('inf')
         millor_camio = None
 
         for id_camio in range(num_camions): # Recorrem cada camió pel seu índex
-            centre = params.centres[id_camio] # Obtenim l'objecte Centre de distribució
+            centre = params.centres.centres[id_camio] # Obtenim l'objecte Centre de distribució
             coords_centre = (centre.cx, centre.cy)
             distancia = estat._manhattan(coords_peticio, coords_centre) # calculem la distància entre la petició i el centre 
             if distancia < min_distancia : # Si la distància és menor que la mínima trobada fins ara
                 min_distancia = distancia
                 millor_camio = id_camio
+
         if millor_camio is not None: # si ja tenim un camió assignat
-            if estat.camions[millor_camio]: # Si el camió ja té viatges assignats
-                estat.camions[millor_camio][-1].append(i_peticio) # Afegim la petició al darrer viatge existent
+            camio_viatges = estat.camions[millor_camio]
+            if not camio_viatges or len(camio_viatges[-1]) >= 2: # Si el camió no té viatges o l'últim viatge està ple
+                if len(camio_viatges) < params.n_viatges: # Si el camió pot afegir un nou viatge
+                    camio_viatges.append([i_peticio]) # Creem un nou viatge amb la petició
+                else:
+                    continue  # No es pot assignar aquesta petició
             else:
-                estat.camions[millor_camio].append([i_peticio]) # Si no té viatges, creem un nou viatge amb la petició
+                camio_viatges[-1].append(i_peticio) # Afegim la petició a l'últim viatge existent
     return estat
 
 def generate_empty_initial_state(params: ProblemParameters) -> StateRepresentation:
@@ -327,9 +337,15 @@ def generate_initial_state(parametres: ProblemParameters) -> StateRepresentation
                 millor_camio = id_camio
 
         if millor_camio is not None:
-            if estat.camions[millor_camio]:  # Si el camió ja té viatges assignats
-                estat.camions[millor_camio][-1].append(id_peticio)  # Afegim la petició al darrer viatge existent
-            else:
-                estat.camions[millor_camio].append([id_peticio])  # Si no té viatges, creem un nou viatge amb la petició
+            camio_viatges = estat.camions[millor_camio]
 
+            if not camio_viatges or len(camio_viatges[-1]) >= 2:
+                if len(camio_viatges) < parametres.n_viatges:
+                    camio_viatges.append([id_peticio])
+                else:
+                    continue  # No es pot assignar aquesta petició
+            else:
+                camio_viatges[-1].append(id_peticio)
     return estat
+
+
