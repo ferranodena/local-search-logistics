@@ -11,4 +11,4 @@ params = ProblemParameters( km=640, n_viatges=5, valor=1000, cost_km=2, gasoline
 initial_state = generate_initial_state(params)
 n =simulated_annealing(CamionsProblema(initial_state))
 n1 = hill_climbing(CamionsProblema(initial_state))
-print(n)
+print(n1)
