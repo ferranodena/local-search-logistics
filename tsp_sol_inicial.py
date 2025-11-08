@@ -5,6 +5,9 @@ from camions_problema import CamionsProblema
 from aima3.search import simulated_annealing, hill_climbing
 import dataclasses
 from abia_Gasolina import Gasolinera, Gasolineres, Distribucio, CentresDistribucio
+import matplotlib.pyplot as plt
+import numpy as np
+from timeit import timeit
 @dataclasses.dataclass
 
 
@@ -112,3 +115,44 @@ print("-" * 80)
 for r in resultats:
     print(f"Seed: {r['seed']:>8} | Inicialitzacio: {r['inicialitzacio']:>9} | "
           f"Heuristica final: {r['heuristica']:.2f} | Temps (s): {r['temps']:.9f}")
+
+# Preparar dades pels gràfics
+ordenat_times = [r['temps'] for r in resultats if r['inicialitzacio'] == 'ordenada']
+greedy_times = [r['temps'] for r in resultats if r['inicialitzacio'] == 'greedy']
+random_times = [r['temps'] for r in resultats if r['inicialitzacio'] == 'aleatoria']
+
+ordenat_heur = [r['heuristica'] for r in resultats if r['inicialitzacio'] == 'ordenada']
+greedy_heur = [r['heuristica'] for r in resultats if r['inicialitzacio'] == 'greedy']
+random_heur = [r['heuristica'] for r in resultats if r['inicialitzacio'] == 'aleatoria']
+
+# Gràfic de temps d'execució
+plt.figure(figsize=(10, 6))
+labels = ['Ordenat', 'Greedy', 'Aleatori']
+times = [np.mean(ordenat_times), np.mean(greedy_times), np.mean(random_times)]
+std_times = [np.std(ordenat_times), np.std(greedy_times), np.std(random_times)]
+
+plt.bar(labels, times, yerr=std_times, capsize=5)
+plt.title('Temps mitjà d\'execució per tipus d\'inicialització')
+plt.ylabel('Temps (segons)')
+plt.grid(True, alpha=0.3)
+plt.show()
+
+# Gràfic d'heurístiques
+plt.figure(figsize=(10, 6))
+heurs = [np.mean(ordenat_heur), np.mean(greedy_heur), np.mean(random_heur)]
+std_heurs = [np.std(ordenat_heur), np.std(greedy_heur), np.std(random_heur)]
+
+plt.bar(labels, heurs, yerr=std_heurs, capsize=5)
+plt.title('Valor heurístic mitjà per tipus d\'inicialització')
+plt.ylabel('Valor heurístic')
+plt.grid(True, alpha=0.3)
+plt.show()
+
+# Box plot per comparar distribucions
+plt.figure(figsize=(10, 6))
+data = [ordenat_times, greedy_times, random_times]
+plt.boxplot(data, labels=labels)
+plt.title('Distribució dels temps d\'execució')
+plt.ylabel('Temps (segons)')
+plt.grid(True, alpha=0.3)
+plt.show()
