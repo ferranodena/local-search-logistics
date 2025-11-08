@@ -191,7 +191,7 @@ class StateRepresentation(object):
         return new_state
 
     
-    def generate_actions(self) -> Generator[CamionsOperator, None, None]:
+    # def generate_all_actions(self) -> Generator[CamionsOperator, None, None]:
         """
         Genera tots els possibles operadors aplicables a l'estat actual.
         :return: generador d'operadors
@@ -211,7 +211,60 @@ class StateRepresentation(object):
                         if id_camio_desti != id_camio_origen:
                             yield mourePeticio(id_peticio, id_camio_origen, id_camio_desti)
 
-    
+    def generate_actions_lazy(self) -> Generator['CamionsOperator', None, None]:
+        """
+        Genera un conjunt petit d'accions aleatòries (lazy) per a Simulated Annealing o Hill Climbing.
+        Combina accions de tipus swapCentres i mourePeticio de manera equilibrada.
+        """
+        import random
+        actions_generades = set()
+        num_camions = len(self.camions)
+        max_accions = 50  # Nombre màxim d'accions a generar
+
+        for _ in range(max_accions):
+            tipus = random.choices(['swapCentres', 'mourePeticio'], weights=[0.3, 0.7])[0]
+
+            # === 1️⃣ Intercanviar centres entre dos camions ===
+            if tipus == 'swapCentres':
+                c1, c2 = random.sample(range(num_camions), 2)
+                if self.camions[c1] and self.camions[c2]:
+                    accio = ('swapCentres', c1, c2)
+                    if accio not in actions_generades:
+                        actions_generades.add(accio)
+                        yield swapCentres(c1, c2)
+
+            # === 2️⃣ Moure una petició entre camions ===
+            else:
+                id_camio_origen = random.randint(0, num_camions - 1)
+                if not self.camions[id_camio_origen]:
+                    continue
+
+                viatge_origen = random.choice(self.camions[id_camio_origen])
+                if not viatge_origen:
+                    continue
+
+                id_peticio = random.choice(viatge_origen)
+                id_camio_desti = random.choice([i for i in range(num_camions) if i != id_camio_origen])
+
+                # Comprovem si el camió destí pot rebre una nova petició
+                camio_desti = self.camions[id_camio_desti]
+                pot_afegir = False
+
+                if not camio_desti:
+                    pot_afegir = True
+                else:
+                    ultim_viatge = camio_desti[-1]
+                    if len(ultim_viatge) < 2:
+                        pot_afegir = True
+                    elif len(camio_desti) < self.params.n_viatges:
+                        pot_afegir = True
+
+                if pot_afegir:
+                    accio = ('mourePeticio', id_peticio, id_camio_origen, id_camio_desti)
+                    if accio not in actions_generades:
+                        actions_generades.add(accio)
+                        yield mourePeticio(id_peticio, id_camio_origen, id_camio_desti)
+
 
     def __eq__(self, other):
         return isinstance(other, StateRepresentation) and self.params == other.params
