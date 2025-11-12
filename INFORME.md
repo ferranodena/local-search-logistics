@@ -385,6 +385,24 @@ Aquests hen sigut els resultats obtinguts en l'experiment d'avaluació d'operado
 
 ### 4.2 Experiment 2: Estratègia d'Inicialització
 
+Com en la nostra pràctica hem implementat dues solucions inicials, en aquest experiment el que farem serà comparar-los. I també implementarem una nova solució inicial, la aleatòria. Ja que, d'aquesta manera també podem comparar-la amb les dues solucions inicials que hem proposat nosaltres. En aquest experiment farem servir l'algoritme de Hill Climbing (HC). Com a valors per comparar farem servir el **benefici** i el **temps d'execució** de cada solució. Aquest experiment ens servirà per **decidir quina és la solució inicial** que haurem de implementar en la pràctica. També per veure en quins aspectes cada solució té punts forts i en quins no és útil.
+
+#### 4.2.1 Plantejament del problema
+
+Ens plantegem la següent pregunta: Com **afecta la solució inicial** en el la qualitat de les nostres solucions (el nostre temps d'execució, i el nostre benefici) en Hill Climbing?
+Addicionalment, també ens plantejem les següents qüestions:
+- Quina és la solució inicial més ràpida?
+- Si és la més ràpida, serà la nostra solució inicial definitiva, o n'escollirem una altra?
+- Hi ha molta diferència entre el temps d'execució o el benefici de cada solució?
+
+Per a respondre a aquestes preguntes, plantejarem les següents hipòtesis:
+- $H_0$: Les tres solucions inicials tenen el mateix temps d'execució.
+- $H_{1_a}$: La solució inicial de 'greedy' serà la més efectiva en termes de temps d'execució i benefici.
+- $H_{1_b}$: La solució que sigui més ràpida, serà la nostra solució definitiva.
+- $H_{1_c}$: La solució aleatòria és molt pitjor en termes de benefici que les altres dues.
+
+#### 4.2.2 Mètode
+
 ### 4.3 Experiment 3: Calibratge de Simulated Annealing
 
 ### 4.4 Experiment 4: Escalabilitat Temporal
