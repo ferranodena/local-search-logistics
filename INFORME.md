@@ -437,14 +437,36 @@ Per a respondre aquestes qüestions, plantegem les següents hipòtesis:
 - $H_{1_a}$: Alguna combinació específica de paràmetres proporciona solucions de millor qualitat (major benefici).
 - $H_{1_b}$: Alguna combinació específica de paràmetres redueix significativament el temps d'execució.
 
-
-
 #### 4.3.2 Mètode
-
-
+Per a resoldre aquesta questió, farem un experiment on definim una graella d'hiperparàmetres, que podem variar depenent del resultat que volguem obtenir. A més hiperparàmetres, més costós seràel  script i més temps trigarà a executar-se. També definim un número de repeticions amb seeds diferents. 
+Per a cada run es generen gasolineres i centres amb una llavor específica i es construeix un estat inicial heurístic del problema `CamionsProblema`, mantenint constants els paràmetres operatius per a comparabilitat. 
+Per a cada execució es calcula el benefici i es mesura el temps en milisegons; s'emmagatzemen resultats parcials en un fitxer per tolerància a fallades i posterior reprocessament.
+S'agreguen les rèpliques per configuració calculant el benefici mitjà, i es selecciona la configuració amb la mitjana més alta com a millor candidata per a ús operatiu.
 
 
 #### 4.3.3 Resultats
+Aquests són els resultats de l'execució del script:
+
+| limit | k  | λ     | réplica | Benefici (€) | Temps (ms) |
+|-------|----|-------|---------|--------------|------------|
+| 200   | 1  | 0.001 |   0     |   71,692     |   15,719   |
+| 200   | 1  | 0.001 |   1     |   79,840     |   18,440   |
+| 200   | 1  | 0.005 |   0     |   71,652     |   16,120   |
+| 200   | 1  | 0.005 |   1     |   79,840     |   18,418   |
+| 200   | 20 | 0.001 |   0     |   71,632     |   15,772   |
+| 200   | 20 | 0.001 |   1     |   79,840     |   17,563   |
+| 200   | 20 | 0.005 |   0     |   71,632     |   15,935   |
+| 200   | 20 | 0.005 |   1     |   79,820     |   17,906   |
+| 500   | 1  | 0.005 |   0     |   71,696     |   32,836   |
+| 500   | 1  | 0.001 |   0     |   71,684     |   33,224   |
+| 500   | 1  | 0.001 |   1     |   79,840     |   36,001   |
+| 500   | 20 | 0.001 |   0     |   71,728     |   25,523   |
+| 500   | 20 | 0.005 |   0     |   71,664     |   25,345   |
+| 500   | 1  | 0.005 |   1     |   79,840     |   27,252   |
+| 500   | 20 | 0.001 |   1     |   79,816     |   27,494   |
+| 500   | 20 | 0.005 |   1     |   79,852     |   25,996   |
+
+
 
 #### 4.3.4 Conclusions
 

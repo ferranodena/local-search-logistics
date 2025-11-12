@@ -201,9 +201,9 @@ class StateRepresentation(object):
         num_camions = len(self.camions)
 
         # Generar operadors swapCentres per cada parella de centres
-        for i in range(num_camions):
-            for j in range(i + 1, num_camions):
-                yield swapCentres(i, j)
+        #for i in range(num_camions):
+            #for j in range(i + 1, num_camions):
+                #yield swapCentres(i, j)
 
         # Generar operadors mourePeticio per cada petició i camions diferents
         for id_camio_origen in range(num_camions):

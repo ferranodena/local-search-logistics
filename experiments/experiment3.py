@@ -32,7 +32,7 @@ params_template = {
 # Espai de paràmetres per simulated annealing
 # (petit per proves ràpides, llarg per experiments reals)
 # ----------------------------------------
-limits = [20000, 50000]           # prova amb menys valors per començar
+limits = [200, 500]           # prova amb menys valors per començar
 ks = [1, 20]
 lams = [0.001, 0.005]
 REPEATS = 2                     # reduir per proves ràpides
