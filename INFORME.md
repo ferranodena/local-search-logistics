@@ -475,7 +475,7 @@ Després d'executar el nostre experiment, els resultats que ens retorna són:
     </tbody>
   </table>
   <div class="table-caption">
-    Taula: Resultats de l'experiment amb diferents mètodes d'inicialització (mitjanes). Comparació dels ingressos, costos, penalitzacions, beneficis i temps d'execució.
+    Taula 2: Resultats de l'experiment amb diferents mètodes d'inicialització (mitjanes). Comparació dels ingressos, costos, penalitzacions, beneficis i temps d'execució.
   </div>
 </div>
 
@@ -494,7 +494,7 @@ En aquest gràfic veiem en cada box-plot les dades d'una solució inicial. La no
 
 <div class="image-row">
   <div class="image-column">
-    <img src="./experiments/resultats/2/ingressos.png" alt="Gràfic de ingressos per solució inicial">
+    <img src="./experiments/resultats/2/diners.png" alt="Gràfic de ingressos per solució inicial">
     <div class="caption">Figura n+1: Gràfcs varis de cada solució comparada amb una magnitud monetària. </div>
   </div>
 </div>
