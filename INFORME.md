@@ -420,6 +420,86 @@ Per a respondre a aquestes preguntes, plantejarem les següents hipòtesis:
 
 #### 4.2.2 Mètode
 
+Per poder resoldre aquesta qüestió, farem un experiment on, executarem el nostre codi amb l'algoritme de Hill Climbing múltiples vegades per cada solució inicial proposada. Farem 10 rèpliques per cada solució inicial, i cada rèplica es farà amb una seed diferent, per evitar que els nostres resultats no estiguin condicionats. En aquest experiment mesurarem el benefici i el temps d'execució i a partir d'aquestes dades intentarem determinar si les nostres hipòtesis inicials són certes o no.
+
+#### 4.2.3 Resultats
+
+Després d'executar el nostre experiment, els resultats que ens retorna són:
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Inicialització</th>
+        <th>Ingressos</th>
+        <th>Cost</th>
+        <th>Penalitzacio</th>
+        <th>Benefici</th>
+        <th>Temps (s)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>ordenada</td>
+        <td>4914.60</td>
+        <td>2050.20</td>
+        <td>255.20</td>
+        <td>2609.20</td>
+        <td>0.001348</td>
+      </tr>
+      <tr>
+        <td>greedy</td>
+        <td>4828.00</td>
+        <td>1995.80</td>
+        <td>168.60</td>
+        <td>2663.60</td>
+        <td>0.001405</td>
+      </tr>
+      <tr>
+        <td>aleatoria</td>
+        <td>4914.60</td>
+        <td>2046.72</td>
+        <td>255.20</td>
+        <td>2612.68</td>
+        <td>0.001307</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="table-caption">
+    Taula: Resultats de l'experiment amb diferents mètodes d'inicialització (mitjanes). Comparació dels ingressos, costos, penalitzacions, beneficis i temps d'execució.
+  </div>
+</div>
+
+
+A priori, no podem veure una diferència molt clara entre els resultats de cada solució inicial, per tant, fem gràfics d'aquesta manera podrem veure les diferències de manera més clara i visual, per tant obtenim:
+
+<div class="image-row">
+  <div class="image-column">
+    <img src="./experiments/resultats/2/temps.png" alt="Gràfic de Temps d'Execució vs cada solució inicial">
+    <div class="caption">Figura n: Boxplot de comparació del temps d'execució amb la solució inicial.
+    </div>
+  </div>
+</div>
+
+En aquest gràfic veiem en cada box-plot les dades d'una solució inicial. La nostra linia vermella ens indica a on està la mitjana. Ara sí que podem veure una diferència notable entre cada solució inicial. La nostra solució aleatòria, podem veure que el seu temps d'execució té un ventall molt més gran, ja que és una solució aleatòria. Després podem veure que la de menys variància és la solució greedy. Però veiem que la mitjana més baixa és la solució ordenada. Ara haurem de plantejar-nos si preferim un temps d'execució més baix, o una variància més baixa. Com veiem en els dos casos és una diferència bastant petita, ja que la nostra diferència del temps d'execució és de 0,1 ms. Per tant, per poder decidir de manera més clara, passem als gràfics dels ingressos.
+
+<div class="image-row">
+  <div class="image-column">
+    <img src="./experiments/resultats/2/ingressos.png" alt="Gràfic de ingressos per solució inicial">
+    <div class="caption">Figura n+1: Gràfcs varis de cada solució comparada amb una magnitud monetària. </div>
+  </div>
+</div>
+
+En aquest cas, podem veure una similitud de tendència en el comportament dels gràfics al apartat anterior. Però en aquest cas, la variància és similar per la solució ordenada i la aleatòria. Una cosa important a destacar és la poca variància que té la solució greedy en el gràfic de benefici, que podem dir que és el més important. Veiem que es manté a la part alta del gràfic de manera força constant. Mirant la resta dels gràfics, només podem notar una diferència notable en el gràfic de la penalització, que també és important, ja que una alta penalització ens comporta una pèrdua de beneficis exponencial degut a les peticions no acudides. Per tant, aquests gràfics ja ens ajuden més a poder escollir una de les solucions inicials plantejades.
+
+#### 4.2.4 Conclusions
+
+Tenint en compte tots els nostres resultats i els raonaments que hem pogut fer, inicialment ja podem rebutjar la nostra hipòtesi nula $H_0$, ja que és cert que són temps d'execució força similars, però al tenir variàncies més o menys altes, podem dir que aquesta hipòtesi no és certa.
+Per la nostra segonaa hipòtesi $H_{1_a}$, no podem dir que la solució inicial de greedy és la que té el temps d'execució més petit, però té un marge molt petit, per tant com el benefici sí que és el millor de les tres opcions, podem donar com a vàlida aquesta hipòtesi
+Per la següent hipòtesi tenim $H_{1_b}$, que sí que rebutjarem, ja que sabem que la nostra solució més ràpida és la ordenada, però la que ens interessa més és la opció 'greedy'. Ja que no només hem de mirar la magnitud del temps, també ens hem de fixar en els beneficis.
+per la última hiòtesi que teniem $H_{1_c}$, parlem dels beneficis de la solució aleatòria. Ja que inicialment deiem que era la que pitjors beneficis tindria, cosa que hem pogut comprovar que no, en termes de beneficis estava emparellada amb la solució ordenada, cosa que ens dona encara més pes a la solució 'greedy'. Per tant, també hem de rebutjar aquesta hipòtesi.
+
+Com a conclusió d'aquest experiment, podem dir que la nostra millor solució inicial és la 'greedy'. Ja que veiem que el seu temps d'execució no és relativament alt, i veiem com el seu benefici, que és la nostra variable més important, té el valor més alt de les tres solucions inicials. No només el seu valor, sinó també en la seva variància, ja que en els gràfics podem veure com és la menys volàtil, i per tant és la que més ens servirà per la pràctica.
+
 ### 4.3 Experiment 3: Calibratge de Simulated Annealing
 L'objectiu d'aquest experiment és determinar quins paràmetres de l'algorisme de Simulated Annealing (SA) proporcionen el millor rendiment en termes de qualitat de les solucions obtingudes i temps d'execució. En particular, ens centrarem en avaluar l'impacte dels paràmetres d'inicialització de la temperatura, taxa de refredament i nombre d'iteracions per temperatura.
 
