@@ -342,51 +342,61 @@ Posteriorment, calcularem la mitjana i desviació típica dels resultats per a c
 #### 4.1.3 Resultats
 Aquests hen sigut els resultats obtinguts en l'experiment d'avaluació d'operadors, per a diferentes seeds:
 
-| Operadors                   | Rèplica | Seed  | Benefici (€) | Temps (ms) | Peticions servides | Peticions pendents | Km totals recorreguts (km) |
-|------------------------------|---------|-------|--------------|------------|------------------|------------------|----------------------------|
-| swapCentres                 | 1       | 1234  | 72,024       | 461.82     | 79/131           | 52               | 2,708                      |
-| swapCentres                 | 2       | 1235  | 79,856       | 112.06     | 86/119           | 33               | 2,812                      |
-| swapCentres                 | 3       | 1236  | 85,004       | 252.16     | 91/124           | 33               | 2,688                      |
-| swapCentres                 | 4       | 1237  | 77,316       | 367.27     | 83/132           | 49               | 2,592                      |
-| swapCentres                 | 5       | 1238  | 74,304       | 490.35     | 81/120           | 39               | 2,778                      |
-| swapCentres                 | 6       | 1239  | 81,280       | 232.61     | 87/130           | 43               | 2,380                      |
-| swapCentres                 | 7       | 1240  | 78,000       | 234.57     | 84/128           | 44               | 2,270                      |
-| swapCentres                 | 8       | 1241  | 68,272       | 96.61      | 74/130           | 56               | 2,304                      |
-| swapCentres                 | 9       | 1242  | 67,492       | 339.37     | 74/125           | 51               | 2,524                      |
-| swapCentres                 | 10      | 1243  | 80,452       | 113.63     | 86/139           | 53               | 2,104                      |
-| mourePeticio                | 1       | 1234  | 72,040       | 583.78     | 79/131           | 52               | 2,700                      |
-| mourePeticio                | 2       | 1235  | 79,856       | 121.01     | 86/119           | 33               | 2,812                      |
-| mourePeticio                | 3       | 1236  | 85,004       | 239.35     | 91/124           | 33               | 2,688                      |
-| mourePeticio                | 4       | 1237  | 77,316       | 293.87     | 83/132           | 49               | 2,592                      |
-| mourePeticio                | 5       | 1238  | 74,304       | 366.28     | 81/120           | 39               | 2,778                      |
-| mourePeticio                | 6       | 1239  | 81,280       | 209.32     | 87/130           | 43               | 2,380                      |
-| mourePeticio                | 7       | 1240  | 78,000       | 200.46     | 84/128           | 44               | 2,270                      |
-| mourePeticio                | 8       | 1241  | 68,272       | 94.10      | 74/130           | 56               | 2,304                      |
-| mourePeticio                | 9       | 1242  | 67,492       | 323.54     | 74/125           | 51               | 2,524                      |
-| mourePeticio                | 10      | 1243  | 80,452       | 109.42     | 86/139           | 53               | 2,104                      |
-| swap+moure                  | 1       | 1234  | 72,040       | 543.33     | 79/131           | 52               | 2,700                      |
-| swap+moure                  | 2       | 1235  | 79,856       | 102.17     | 86/119           | 33               | 2,812                      |
-| swap+moure                  | 3       | 1236  | 85,004       | 214.01     | 91/124           | 33               | 2,688                      |
-| swap+moure                  | 4       | 1237  | 77,316       | 287.89     | 83/132           | 49               | 2,592                      |
-| swap+moure                  | 5       | 1238  | 74,304       | 361.36     | 81/120           | 39               | 2,778                      |
-| swap+moure                  | 6       | 1239  | 81,280       | 229.31     | 87/130           | 43               | 2,380                      |
-| swap+moure                  | 7       | 1240  | 78,000       | 220.92     | 84/128           | 44               | 2,270                      |
-| swap+moure                  | 8       | 1241  | 68,272       | 84.86      | 74/130           | 56               | 2,304                      |
-| swap+moure                  | 9       | 1242  | 67,496       | 416.40     | 74/125           | 51               | 2,522                      |
-| swap+moure                  | 10      | 1243  | 80,452       | 156.49     | 86/139           | 53               | 2,104                      |
-| swap+moure+intercanvia      | 1       | 1234  | 72,024       | 455.55     | 79/131           | 52               | 2,708                      |
-| swap+moure+intercanvia      | 2       | 1235  | 79,856       | 103.21     | 86/119           | 33               | 2,812                      |
-| swap+moure+intercanvia      | 3       | 1236  | 85,004       | 241.00     | 91/124           | 33               | 2,688                      |
-| swap+moure+intercanvia      | 4       | 1237  | 77,316       | 292.06     | 83/132           | 49               | 2,592                      |
-| swap+moure+intercanvia      | 5       | 1238  | 74,304       | 366.88     | 81/120           | 39               | 2,778                      |
-| swap+moure+intercanvia      | 6       | 1239  | 81,280       | 222.64     | 87/130           | 43               | 2,380                      |
-| swap+moure+intercanvia      | 7       | 1240  | 78,000       | 198.64     | 84/128           | 44               | 2,270                      |
-| swap+moure+intercanvia      | 8       | 1241  | 68,272       | 87.67      | 74/130           | 56               | 2,304                      |
-| swap+moure+intercanvia      | 9       | 1242  | 67,540       | 397.74     | 74/125           | 51               | 2,500                      |
-| swap+moure+intercanvia      | 10      | 1243  | 80,452       | 107.80     | 86/139           | 53               | 2,104                      |
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Operadors</th>
+        <th>Benefici mitjà (€)</th>
+        <th>Temps mitjà (ms)</th>
+        <th>Peticions servides (mitjana)</th>
+        <th>Peticions pendents (mitjana)</th>
+        <th>Km totals mitjans (km)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>swapCentres</td>
+        <td>76,000.00</td>
+        <td>270.30</td>
+        <td>82.6</td>
+        <td>45.3</td>
+        <td>2,516.0</td>
+      </tr>
+      <tr>
+        <td>mourePeticio</td>
+        <td>76,007.60</td>
+        <td>244.81</td>
+        <td>82.6</td>
+        <td>45.3</td>
+        <td>2,515.8</td>
+      </tr>
+      <tr>
+        <td>swap+moure</td>
+        <td>76,078.80</td>
+        <td>279.77</td>
+        <td>82.6</td>
+        <td>45.3</td>
+        <td>2,526.4</td>
+      </tr>
+      <tr>
+        <td>swap+moure+intercanvia</td>
+        <td>76,105.00</td>
+        <td>247.45</td>
+        <td>82.6</td>
+        <td>45.3</td>
+        <td>2,513.6</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="table-caption">
+    Taula 1: Resum per conjunt d’operadors. Mitjanes sobre 10 rèpliques per conjunt: benefici, temps, peticions servides/pendents i quilòmetres totals.
+  </div>
+</div>
+
 
 1. Benefici mitjà i desviació estàndard per a cada conjunt d'operadors:
-A la taula podem observar que tots els conjunts d'operadors obtenen un benefici mitjà molt similar, al voltant dels 76.400 euros, amb una desviació estàndard propera als 5.460 euros. Això indica que la qualitat de les solucions és força consistent entre els operadors, i que cap d'ells destaca clarament en termes de benefici final.
+A la taula podem observar que tots els conjunts d'operadors obtenen un benefici mitjà molt similar, al voltant dels 76.000 euros, amb una desviació estàndard propera als 5.460 euros. Això indica que la qualitat de les solucions és força consistent entre els operadors, i que cap d'ells destaca clarament en termes de benefici final.
 El fet de que les diferències siguin tan petites suggereix que els operadors no generen espais de cerca radicalment diferents: tots exploren veinats amb característiques similars i acaben trobant solucions comparables. 
 
 2. Temps d'execució mitjà i desviació estàndard per a cada conjunt d'operadors:
