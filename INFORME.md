@@ -492,7 +492,7 @@ Hem implementat la representació del problema i els algorismes de cerca local u
 
 ### 5.1 Experiment 1: Selecció d'Operadors
 
-Com s'ha explicat abans, hem implementat tres operadors diferents per a la cerca local: **``swapCentres``**, **``mourePeticio``** i **``intercanviarPeticions``**. Aquest experiment té com a objectiu avaluar l'impacte de cadascun d'aquests operadors en la qualitat de les solucions obtingudes i en el temps d'execució dels algorismes de cerca local (Hill Climbing i Simulated Annealing).
+Com s'ha explicat abans, hem implementat tres operadors diferents per a la cerca local: **`swapCentres**, **mourePeticio** i **intercanviarPeticions`**. Aquest experiment té com a objectiu avaluar l'impacte de cadascun d'aquests operadors en la qualitat de les solucions obtingudes i en el temps d'execució dels algorismes de cerca local (Hill Climbing i Simulated Annealing).
 
 #### 5.1.1 Plantejament del problema
 
@@ -509,11 +509,11 @@ Aleshores, proposem la hipòtesi nul·la i les hipòtesis alternatives següents
 Per a resoldre aquesta qüestió, realitzarem un estudi experimental, on executarem l'algorisme de Hill Climbing múltiples vegades per a cada combinació d'operadors. Cada execució es farà amb una inicialització diferent (mitjanant una seed diferent) per garantir que els resultats no estiguin condicionats per una única configuració inicial. Així podrem mesurar tant la mitjana de benefici obtingut, com la variabilitat dels resultats i el temps d'execució per a cada combinació d'operadors.
 Les combinacions d'operadors que avaluarem són les següents:
 
-- **``swapCentres``**
-- **``mourePeticio``**
-- **``intercanviarPeticions``**
-- **``swapCentres`` + ``mourePeticio``**
-- **``swapCentres`` + ``mourePeticio`` + ``intercanviarPeticions``**
+- *`swapCentres`*
+- *`mourePeticio`*
+- *`intercanviarPeticions`*
+- *`swapCentres` + `mourePeticio`*
+- *`swapCentres` + `mourePeticio` + `intercanviarPeticions`*
 
 Per a cada combinació d'operadors, realitzarem 5 rèpliques amb seeds diferents (1234, 1235, ..., 1243), registrant per a cada rèplica:
 
@@ -582,18 +582,27 @@ Aquests hen sigut els resultats obtinguts en l'experiment d'avaluació d'operado
   </div>
 </div>
 
-1. **Benefici mitjà i desviació estàndard per a cada conjunt d'operadors**: A la taula podem observar que tots els conjunts d'operadors obtenen un benefici mitjà molt similar, al voltant dels 76.000 euros, amb una desviació estàndard propera als 5.460 euros. Això indica que la qualitat de les solucions és força consistent entre els operadors, i que cap d'ells destaca clarament en termes de benefici final. El fet de que les diferències siguin tan petites suggereix que els operadors no generen espais de cerca radicalment diferents: tots exploren veinats amb característiques similars i acaben trobant solucions comparables.
+1. *Benefici mitjà i desviació estàndard per a cada conjunt d'operadors*: A la taula podem observar que tots els conjunts d'operadors obtenen un benefici mitjà molt similar, al voltant dels 76.000 euros, amb una desviació estàndard propera als 5.460 euros. Això indica que la qualitat de les solucions és força consistent entre els operadors, i que cap d'ells destaca clarament en termes de benefici final. El fet de que les diferències siguin tan petites suggereix que els operadors no generen espais de cerca radicalment diferents: tots exploren veinats amb característiques similars i acaben trobant solucions comparables.
 
-2. **Temps d'execució mitjà i desviació estàndard per a cada conjunt d'operadors**: El temps mitjà d'execució és el principal factor diferenciador: veiem que l'operador **``swapCentres``** és el més ràpid, amb un temps mitjà d'uns 250 ms, mentre que la combinació de tots tres operadors (**``swapCentres`` + ``mourePeticio`` + ``intercanviarPeticions``**) és la més lenta, amb un temps mitjà proper als 270 ms. Això indica que afegir més operadors incrementa el temps d'execució, però no millora significativament la qualitat de les solucions obtingudes.
+2. *Temps d'execució mitjà i desviació estàndard per a cada conjunt d'operadors*: El temps mitjà d'execució és el principal factor diferenciador: veiem que l'operador **`mourePeticio`** és el més ràpid, amb un temps mitjà d'uns 270.3 ms, mentre que la combinació de (**`swapCentres` + `mourePeticio`**) és la més lenta, amb un temps mitjà proper als 230 ms.
 
-3. **Peticions servides i pendents:** el nombre de peticions servides i pendents és molt similar entre tots els conjunts d'operadors, amb una mitjana d'aproximadament 82 peticions servides i 44 pendents. Això reforça la idea que els diferents operadors no generen solucions radicalment diferents en termes de cobertura de peticions.
+3. *Peticions servides i pendents:* el nombre de peticions servides i pendents és el mateix per a totes les combinacions d'operadors. Això reforça la idea que els diferents operadors no generen solucions radicalment diferents en termes de cobertura de peticions.
 
-4. **Quilòmetres totals recorreguts:** els quilòmetres totals recorreguts també són molt similars entre els diferents conjunts d'operadors, amb una mitjana d'uns 2.500 km. Això suggereix que els operadors no afecten significativament l'eficiència del recorregut dels camions.
+4. *Quilòmetres totals recorreguts:* els quilòmetres totals recorreguts també són molt similars entre els diferents conjunts d'operadors, amb una mitjana d'uns 2.500 km. Això suggereix que els operadors no afecten significativament l'eficiència del recorregut dels camions.
 
 #### 5.1.4 Conclusions
 
-Amb els resultats obtinguts, podem concloure que afegir més operadors no millora significativament la qualitat de les solucions obtingudes pels algorismes de cerca local, però sí que incrementa el temps d'execució.
-Per tant, podem rebutjar la hipòtesi nul·la $H_0$ i acceptar les hipòtesis alternatives $H_{1_a}$ i $H_{1_b}$. Això ens porta a la conclusió que podem simplificar els nostres algorismes de cerca local utilitzant només l'operador **``swapCentres``**, ja que aquest és el més ràpid i ofereix una qualitat de solució comparable als altres conjunts d'operadors.
+Els resultats mostren que tots els conjunts d’operadors aconsegueixen un benefici mitjà molt similar, al voltant dels 76.000 €, i que el nombre de peticions servides, les pendents i els quilòmetres totals recorreguts pràcticament no varien entre configuracions. Les diferències de benefici entre el pitjor i el millor conjunt (uns 100 € sobre 76.000 €) són molt petites, de l’ordre d’un 0,1–0,2 %, i per tant no es pot dir que cap operador “marqui la diferència” en la qualitat de les solucions.
+
+Pel que fa al temps, sí que s’observen diferències: el conjunt més ràpid és mourePeticio (uns 245 ms de mitjana), mentre que swapCentres + mourePeticio és el més lent (uns 280 ms), i les combinacions amb intercanviarPeticions queden en un terme mig. Atès que el benefici obtingut és pràcticament idèntic, el temps d’execució es converteix en el factor clau per escollir quins operadors utilitzar.
+
+En relació amb les hipòtesis:
+
+- $H_0$ afirmava que tots els operadors contribueixen de manera significativa a l’augment del benefici. Els resultats apunten més aviat al contrari: afegir nous operadors només aporta millores molt modestes i dins del marge de variabilitat, de manera que no hi ha evidència per mantenir $H_0$.
+- $H_{1_a}$  proposava que hi ha almenys un operador que no aporta cap millora significativa en la qualitat de les solucions. Com que el benefici i les altres mètriques pràcticament no canvien en funció del conjunt d’operadors, $H_{1_a}$ queda raonablement suportada: es pot prescindir d’alguns operadors sense perdre qualitat apreciable.
+- $H_{1_b}$ plantejava que alguna combinació d’operadors ofereix un bon equilibri entre qualitat i temps. En el nostre cas, mourePeticio com a únic operador és el que presenta aquest equilibri més clar: obté un benefici mitjà pràcticament idèntic al de la resta de combinacions, però amb un dels temps d’execució més baixos i una implementació més senzilla.
+
+En consequència, per a la resta de la pràctica és raonable simplificar la cerca local utilitzant només l'operador mourePeticio. Aquesta elecció redueix lleugerament el temps i la complexitat de l'algorisme, mantenint una qualitat de solució comparable a la de les combinacions amb més operadors.
 
 ### 5.2 Experiment 2: Estratègia d'Inicialització
 

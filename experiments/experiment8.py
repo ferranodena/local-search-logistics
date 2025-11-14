@@ -3,54 +3,71 @@ from implementacio.camions_problema import CamionsProblema
 from implementacio.camions_parametres import ProblemParameters
 from implementacio.camions_estat import generate_greedy_initial_state, generate_initial_state, generate_empty_initial_state, StateRepresentation
 from implementacio.abia_Gasolina import Gasolineres, CentresDistribucio
-from implementacio.camions_operadors import CamionsOperator, swapCentres
+from implementacio.camions_operadors import CamionsOperator, mourePeticio
 from typing import Generator
 import time
 
 
-# Classe personalitzada que només genera operadors swapCentres
-class StateRepresentationSwapCentresOnly(StateRepresentation):
+# Classe personalitzada que només genera operadors mourePeticio
+class StateRepresentationMourePeticioOnly(StateRepresentation):
     """
-    Estat que només genera operadors swapCentres per Hill Climbing.
+    Estat que només genera operadors mourePeticio per Hill Climbing.
     """
     def generate_all_actions(self) -> Generator[CamionsOperator, None, None]:
         """
-        Genera només operadors swapCentres per cada parella de centres.
+        Genera només operadors mourePeticio per moure peticions entre camions.
         """
         num_camions = len(self.camions)
-        for i in range(num_camions):
-            for j in range(i + 1, num_camions):
-                yield swapCentres(i, j)
+        
+        # Per cada camió origen
+        for id_camio_origen in range(num_camions):
+            if not self.camions[id_camio_origen]:  # Si el camió no té viatges
+                continue
+            
+            # Per cada viatge del camió origen
+            for viatge in self.camions[id_camio_origen]:
+                if not viatge:  # Si el viatge està buit
+                    continue
+                
+                # Per cada petició del viatge
+                for id_peticio in viatge:
+                    # Per cada camió destí diferent de l'origen
+                    for id_camio_desti in range(num_camions):
+                        if id_camio_desti == id_camio_origen:
+                            continue
+                        
+                        # Generar l'operador mourePeticio
+                        yield mourePeticio(id_peticio, id_camio_origen, id_camio_desti)
 
 
-# Problema personalitzat que usa l'estat amb només swapCentres
-class CamionsProblemaSwapCentresOnly(CamionsProblema):
+# Problema personalitzat que usa l'estat amb només mourePeticio
+class CamionsProblemaMourePeticioOnly(CamionsProblema):
     """
-    Problema que només permet operadors swapCentres.
+    Problema que només permet operadors mourePeticio.
     """
     def result(self, state: StateRepresentation, action: CamionsOperator) -> StateRepresentation:
         """
-        Aplica l'acció i retorna un estat del tipus StateRepresentationSwapCentresOnly.
+        Aplica l'acció i retorna un estat del tipus StateRepresentationMourePeticioOnly.
         """
         new_state = state.apply_action(action)
         # Convertir al nou tipus d'estat
-        swap_only_state = StateRepresentationSwapCentresOnly(new_state.params)
-        swap_only_state.peticions_info = new_state.peticions_info
-        swap_only_state.gasolinera_per_peticio = new_state.gasolinera_per_peticio
-        swap_only_state.camions = new_state.camions
-        swap_only_state.peticions_servides = new_state.peticions_servides
-        return swap_only_state
+        moure_only_state = StateRepresentationMourePeticioOnly(new_state.params)
+        moure_only_state.peticions_info = new_state.peticions_info
+        moure_only_state.gasolinera_per_peticio = new_state.gasolinera_per_peticio
+        moure_only_state.camions = new_state.camions
+        moure_only_state.peticions_servides = new_state.peticions_servides
+        return moure_only_state
 
 
 # ========================================
-# EXPERIMENT ESPECIAL - Només swapCentres
+# EXPERIMENT ESPECIAL - Només mourePeticio
 # ========================================
 # Configuració segons l'enunciat:
 # - 10 centres de distribució
 # - 1 camió per centre (multiplicitat = 1)
 # - 100 gasolineres
 # - 10 execucions amb seeds diferents
-# - Només operador swapCentres
+# - Només operador mourePeticio
 
 # Acumuladors per les mitjanes
 benefici_total = 0
@@ -80,18 +97,18 @@ for i in range(NUM_EXECUCIONS):
         centres=centres
     )
     
-    # Generar l'estat inicial (greedy) i convertir-lo al tipus que només usa swapCentres
+    # Generar l'estat inicial (greedy) i convertir-lo al tipus que només usa mourePeticio
     initial_state_base = generate_greedy_initial_state(params)
     
-    # Crear estat inicial personalitzat amb només swapCentres
-    initial_state = StateRepresentationSwapCentresOnly(params)
+    # Crear estat inicial personalitzat amb només mourePeticio
+    initial_state = StateRepresentationMourePeticioOnly(params)
     initial_state.peticions_info = initial_state_base.peticions_info
     initial_state.gasolinera_per_peticio = initial_state_base.gasolinera_per_peticio
     initial_state.camions = initial_state_base.camions
     initial_state.peticions_servides = initial_state_base.peticions_servides
     
-    # Crear el problema amb només swapCentres
-    problema = CamionsProblemaSwapCentresOnly(initial_state)
+    # Crear el problema amb només mourePeticio
+    problema = CamionsProblemaMourePeticioOnly(initial_state)
     
     # Mesurar el temps d'execució en mil·lisegons
     temps_inici = time.perf_counter()
@@ -145,7 +162,7 @@ temps_ms_mitja = temps_ms_acum / NUM_EXECUCIONS
 
 # Mostrar els resultats
 print("=" * 70)
-print("EXPERIMENT ESPECIAL - NOMÉS OPERADOR swapCentres")
+print("EXPERIMENT ESPECIAL - NOMÉS OPERADOR mourePeticio")
 print(f"(Mitjana de {NUM_EXECUCIONS} execucions)")
 print("=" * 70)
 print(f"\nConfiguració del problema:")
@@ -153,7 +170,7 @@ print(f"  - Centres de distribució: 10")
 print(f"  - Camions per centre: 1")
 print(f"  - Total camions: 10")
 print(f"  - Gasolineres: 100")
-print(f"  - Operador: NOMÉS swapCentres")
+print(f"  - Operador: NOMÉS mourePeticio")
 print(f"  - Seeds: 1234-{1234 + NUM_EXECUCIONS - 1}")
 print(f"\n{'='*70}")
 print(f"BENEFICI OBTINGUT: {benefici_mitja:.2f} €")
@@ -179,5 +196,5 @@ print("RESUM:")
 print(f"{'='*70}")
 print(f"Benefici: {benefici_mitja:.2f} €")
 print(f"Temps: {temps_ms_mitja:.2f} ms")
-print(f"Operador utilitzat: swapCentres")
+print(f"Operador utilitzat: mourePeticio")
 print(f"{'='*70}")
