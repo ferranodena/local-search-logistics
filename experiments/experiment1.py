@@ -5,9 +5,7 @@ from implementacio.camions_estat import generate_greedy_initial_state
 from implementacio.abia_Gasolina import Gasolineres, CentresDistribucio
 import time
 
-# ----------------------------------------
 # Configuració bàsica del problema
-# ----------------------------------------
 num_gasolineres = 100
 num_centres = 10
 km_max = 640
@@ -24,9 +22,7 @@ conjunts_operadors = {
     "swap+moure+intercanvia": ["swapCentres", "mourePeticio", "intercanviaPeticio"]
 }
 
-# ----------------------------------------
 # Experiments amb rèpliques
-# ----------------------------------------
 for nom_conjunt, operadors in conjunts_operadors.items():
     print(f"\n=== Experiment amb operadors: {nom_conjunt} ===")
     

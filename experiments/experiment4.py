@@ -4,21 +4,14 @@ from implementacio.camions_parametres import ProblemParameters
 from implementacio.camions_estat import generate_greedy_initial_state 
 from implementacio.abia_Gasolina import Gasolineres, CentresDistribucio
 import time
-import csv
 import matplotlib.pyplot as plt
 import copy
 
 
-# ========================================
-# EXPERIMENT 4: ESCALABILITAT
-# ========================================
-# Estudiar l'evolució del temps d'execució amb la mida del problema
-# Proporció 10:100 (centres:gasolineres)
-
 
 # Configuració de l'experiment
 seed = 1234  # Seed fix per reproducibilitat
-n_repliques = 3  # Nombre de rèpliques per cada mida (per fer mitjana)
+n_repliques = 3  # Nombre de rèpliques per cada mida 
 
 
 # Paràmetres del problema (constants)
@@ -36,7 +29,6 @@ SA_LAMBDA = 0.001
 
 
 # Mides del problema a provar (centres:gasolineres en proporció 10:100)
-# Reduït a 5 mides per optimitzar el temps d'execució
 mides = [
     (10, 100),
     (20, 200),
@@ -46,7 +38,6 @@ mides = [
 ]
 
 
-# Emmagatzemar resultats
 resultats = []
 
 
@@ -86,15 +77,11 @@ for num_centres, num_gasolineres in mides:
         # Generar estat inicial BASE
         initial_state_base = generate_greedy_initial_state(params)
         
-        # ========================================
-        # CREAR CÒPIES INDEPENDENTS
-        # ========================================
+
         initial_state_hc = copy.deepcopy(initial_state_base)
         initial_state_sa = copy.deepcopy(initial_state_base)
         
-        # ========================================
         # HILL CLIMBING
-        # ========================================
         problema_hc = CamionsProblema(initial_state_hc)
         temps_inici_hc = time.perf_counter()
         solucio_hc = hill_climbing(problema_hc)
@@ -110,9 +97,7 @@ for num_centres, num_gasolineres in mides:
         temps_hc_list.append(temps_hc)
         benefici_hc_list.append(benefici_hc)
         
-        # ========================================
-        # SIMULATED ANNEALING amb paràmetres òptims
-        # ========================================
+        # SIMULATED ANNEALING
         problema_sa = CamionsProblema(initial_state_sa)
 
         # Crear funció de schedule que retorna 0 després de SA_LIMIT iteracions
@@ -187,102 +172,9 @@ for r in resultats:
           f"{r['benefici_sa']:<10.2f}±{r['benefici_sa_std']:<8.2f}")
 
 
-print("=" * 80)
 
 
-# ========================================
-# GUARDAR RESULTATS EN CSV
-# ========================================
-with open('experiment_escalabilitat.csv', 'w', newline='') as csvfile:
-    fieldnames = ['num_centres', 'num_gasolineres', 'temps_hc_ms', 'temps_hc_std', 
-                  'temps_sa_ms', 'temps_sa_std', 'benefici_hc', 'benefici_hc_std',
-                  'benefici_sa', 'benefici_sa_std']
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-    
-    writer.writeheader()
-    for r in resultats:
-        writer.writerow(r)
-
-
-print("\nResultats guardats a: experiment_escalabilitat.csv")
-
-
-# ========================================
-# ANÀLISI DE TENDÈNCIES
-# ========================================
-print("\n" + "=" * 80)
-print("ANÀLISI DE TENDÈNCIES")
-print("=" * 80)
-
-
-# Calcular ràtio de creixement del temps
-if len(resultats) >= 2:
-    primers_centres = resultats[0]['num_centres']
-    primers_temps_hc = resultats[0]['temps_hc_ms']
-    primers_temps_sa = resultats[0]['temps_sa_ms']
-    
-    ultims_centres = resultats[-1]['num_centres']
-    ultims_temps_hc = resultats[-1]['temps_hc_ms']
-    ultims_temps_sa = resultats[-1]['temps_sa_ms']
-    
-    increment_centres = ultims_centres / primers_centres
-    increment_temps_hc = ultims_temps_hc / primers_temps_hc
-    increment_temps_sa = ultims_temps_sa / primers_temps_sa
-    
-    print(f"De {primers_centres} a {ultims_centres} centres (x{increment_centres:.1f}):")
-    print(f"  - Temps HC: x{increment_temps_hc:.2f}")
-    print(f"  - Temps SA: x{increment_temps_sa:.2f}")
-    print(f"\nComplexitat temporal observada:")
-    
-    # Determinar complexitat (lineal seria increment_temps ≈ increment_centres)
-    # Quadràtica seria increment_temps ≈ increment_centres^2
-    if increment_temps_hc < increment_centres * 1.5:
-        print(f"  - Hill Climbing: Lineal O(n)")
-    elif increment_temps_hc < increment_centres ** 2 * 1.5:
-        print(f"  - Hill Climbing: Quadràtica O(n²)")
-    else:
-        print(f"  - Hill Climbing: Superior a quadràtica")
-        
-    if increment_temps_sa < increment_centres * 1.5:
-        print(f"  - Simulated Annealing: Lineal O(n)")
-    elif increment_temps_sa < increment_centres ** 2 * 1.5:
-        print(f"  - Simulated Annealing: Quadràtica O(n²)")
-    else:
-        print(f"  - Simulated Annealing: Superior a quadràtica")
-
-
-# Avaluar si els paràmetres de SA es mantenen adequats
-print(f"\n" + "=" * 80)
-print("AVALUACIÓ DELS PARÀMETRES DE SIMULATED ANNEALING")
-print("=" * 80)
-print(f"Paràmetres utilitzats: limit={SA_LIMIT}, k={SA_K}, lambda={SA_LAMBDA}")
-print(f"\nComparació benefici SA vs HC per mida:")
-for r in resultats:
-    diff_percentatge = ((r['benefici_sa'] - r['benefici_hc']) / r['benefici_hc']) * 100
-    if abs(diff_percentatge) < 1:
-        qualitat = "Equivalent"
-    elif diff_percentatge > 0:
-        qualitat = f"SA millor (+{diff_percentatge:.2f}%)"
-    else:
-        qualitat = f"HC millor ({diff_percentatge:.2f}%)"
-    print(f"  {r['num_centres']} centres: {qualitat}")
-
-print(f"\nConclusió: Els paràmetres de SA ", end="")
-# Verificar si SA manté bons resultats en totes les mides
-sa_millor_count = sum(1 for r in resultats if r['benefici_sa'] >= r['benefici_hc'] * 0.99)
-if sa_millor_count >= len(resultats) * 0.8:
-    print("es mantenen adequats en augmentar la mida del problema.")
-else:
-    print("podrien necessitar ajustaments per a problemes més grans.")
-
-
-print("=" * 80)
-
-
-# ========================================
-# GENERAR GRÀFICS
-# ========================================
-print("\nGenerant gràfics...")
+# gràfics
 
 
 # Extreure dades per graficar

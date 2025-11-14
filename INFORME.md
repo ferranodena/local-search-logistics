@@ -325,6 +325,10 @@ code {
     - [5.5.3 Resultats](#553-resultats)
     - [5.5.4 Conclusions](#554-conclusions)
   - [5.6 Experiment 6: Sensibilitat al Cost per km](#56-experiment-6-sensibilitat-al-cost-per-km)
+    - [5.6.1 Plantejament de l'experiment](#561-plantejament-de-lexperiment)
+    - [5.6.2 Mètode](#562-mètode)
+    - [5.6.3 Resultats](#563-resultats)
+    - [5.6.4 Conclusió](#564-conclusió)
   - [5.7 Experiment 7: Variació de l'Horari Laboral](#57-experiment-7-variació-de-lhorari-laboral)
     - [5.7.1 Plantejament del problema](#571-plantejament-del-problema)
     - [5.7.2 Mètode](#572-mètode)
@@ -332,7 +336,11 @@ code {
     - [5.7.4 Conclusió](#574-conclusió)
   - [5.8 Experiment 8: Validació de Resultats (Experiment Especial)](#58-experiment-8-validació-de-resultats-experiment-especial)
   - [5.9 Experiment 9: Generador d'Operadors](#59-experiment-9-generador-doperadors)
-- [5. Conclusions](#5-conclusions)
+    - [5.9.1 Plantejament del problema](#591-plantejament-del-problema)
+    - [5.9.2 Mètode](#592-mètode)
+    - [5.9.3 Resultats](#593-resultats)
+    - [5.9.4 Conclusions](#594-conclusions)
+- [6. Conclusions generals](#6-conclusions-generals)
 
 <div class="page-break"></div>
 
@@ -348,34 +356,56 @@ Aquest tipus de problemes són difícils de resoldre de manera exacta quan la mi
 
 ## 2. Objectius i metodologia
 
+L'objectiu principal d'aquest treball és resoldre un problema de distribució logística de combustible mitjançant algorismes de cerca local, implementant i avaluant tots els components necessaris per obtenir solucions òptimes en termes de benefici econòmic i eficiència operativa. En concret, els objectius específics són:
+
+1. **Dissenyar i implementar la representació del problema**, definint una estructura de dades eficient per a l'estat que tingui en compte les restriccions de capacitat, distància i nombre de viatges dels vehicles.
+
+2. **Desenvolupar estratègies de generació de solucions inicials i operadors de transformació**, implementant múltiples alternatives per a la inicialització i definint un conjunt d'operadors que permetin explorar eficientment l'espai de solucions.
+
+3. **Definir i justificar la funció heurística** que permeti avaluar la qualitat de les solucions considerant ingressos, costos de desplaçament i penalitzacions per peticions pendents, tot analitzant el seu impacte en la cerca.
+
+4. **Experimentar amb els algorismes Hill Climbing i Simulated Annealing**, comparant el rendiment dels diferents components implementats (solució inicial, operadors, heurística) i ajustant els paràmetres per obtenir solucions òptimes.
+
+5. **Analitzar l'escalabilitat i la sensibilitat del sistema** davant variacions en els paràmetres operatius (nombre de centres, camions, cost per km, horari de treball), extraient conclusions rellevants per a futures aplicacions pràctiques.
+
+Per aconseguir aquests objectius, hem fet ús de la biblioteca `aima3` del llenguatge de programació Python per a la implementació dels algorismes de cerca local, i hem estructurat el codi en diversos mòduls per mantenir-lo organitzat i modular.
+Hem fet dos mòduls principals: un per a la implementació de la representació del problema i un altre per a l'execució dels experiments. Per això, a l'hora d'importar els elements de la implementació del problema als scripts de Python, cal afegir `implementacio.` abans del nom de la classe o funció que es vulgui utilitzar. Per exemple, si volem importar els paràmetres del problema, caldrà escriure `from implementacio.camions_parametres import ProblemParameters`. Per executar els scripts doncs, caldrà situar-se a la carpeta arrel del projecte `ABIA_practica_1` i executar els scripts des d'allà, també afegint `experiments.` al l'experiment que es vulgui executar. Per exemple, per executar l'experiment 1, caldrà escriure `python -m experiments.experiment1`.
+
+La metodologia seguida ha inclòs la definició clara del problema, la implementació de les diferents components, i una fase d'experimentació exhaustiva per avaluar l'eficàcia de les solucions proposades.
+Pel desenvolupament del projecte entre els varis membres, hem fet ús d'un repositori GitHub per a la gestió del codi i la col·laboració, assegurant una integració contínua i un seguiment adequat dels canvis realitzats. Aquesta eina també ens permet treballar en diferents parts del treball de manera paral·lela, facilitant la coordinació entre els membres de l'equip i la revisió del codi. Per veure el repositori, podeu visitar el següent enllaç: [Repositori GitHub](https://github.com/polrieramcardle/ABIA_practica_1)
+
+<div class="page-break"></div>
+
 ## 3. Representació del problema
 
 En aquesta secció es descriu com s'ha representat el problema proposat mitjançant algorismes de cerca local. S'inclouen els detalls sobre l'estat, la solució inicial, els operadors de cerca i la funció heurística utilitzada. Aquesta representació és fonamental per al correcte funcionament dels algorismes de cerca local, ja que determina com es poden explorar les solucions possibles i com es pot avaluar la qualitat d'aquestes solucions.
 
 ### 3.1. Definició de l'Estat
 
-Hem definit l'estat com una assignació de peticions de gasolineres als camions dels centres de distribució, tenint en compte les restriccions de distància, viatges màxims per camió i nombre màxim de peticions per viatge. Cada estat inclou la informació sobre quines peticions són ateses per cada camió, així com dintre de quin viatge es troba assignada cada petició.
+Hem definit l'estat com una **assignació completa de peticions de gasolineres als camions dels centres de distribució**, tenint en compte totes les restriccions operatives del problema: limitacions de distància màxima per camió, nombre màxim de viatges permesos per camió, i capacitat de cada viatge.
+
+L'estat es representa mitjançant una **estructura de dades jeràrquica** organitzada en tres nivells: el primer nivell correspon als camions (on cada camió està associat a un centre de distribució específic), el segon nivell conté els viatges assignats a cada camió (ordenats seqüencialment), i el tercer nivell inclou les peticions individuals servides en cada viatge. Aquesta representació permet saber **quines peticions són ateses per cada camió, dins de quin viatge es troben assignades i en quin ordre es serviran**.
 
 ### 3.2. La solució inicial
 
 La solució inicial és el punt de partida per als algorismes de cerca local, i la seva qualitat pot influir significativament en el rendiment de l'algorisme. Hem implementat tres possibles estratègies d'inicialització:
 
-- **Solució Buida:** En la solució buida, deixem tots els camions sense cap petició assignada. Aquesta estratègia és molt simple, amb un cost $O(1)$, cosa que la fa molt eficient en termes de temps. Però, la qualitat de la solució és molt baixa: tot i ser una solució vàlida, ja que a l'enunciat no es prohibeix no atendre cap petició, el punt de partida és molt pobre i l'algorisme haurà de treballar molt per millorar-la. Es una estratègia que pot ser útil per avaluar la capacitat de l'algorisme per trobar bones solucions des d'un punt de partida molt dolent, però en la pràctica no és recomanable per a problemes reals, i no creiem que pugui donar bons resultats en aquest cas.
+- **Solució Buida:** En la solució buida, deixem tots els camions sense cap petició assignada. Aquesta estratègia és molt simple, amb un cost $O(1)$, cosa que la fa molt eficient en termes de temps. Però, la qualitat de la solució és molt baixa: tot i ser una solució vàlida, ja que a l'enunciat no es prohibeix no atendre cap petició, el punt de partida és molt pobre i l'algorisme haurà de treballar molt per millorar-la. És una estratègia que pot ser útil per avaluar la capacitat de l'algorisme per trobar bones solucions des d'un punt de partida molt dolent, però en la pràctica no és recomanable per a problemes reals, i no creiem que pugui donar bons resultats en aquest cas.
 - **Inicialització Aleatòria:** En aquesta estratègia, assignem les peticions més properes a cada centre de distribució fins a omplir la seva capacitat, tenint en compte el nombre màxim de viatges que pot fer cada camió. Aquesta estratègia és més complexa que la solució buida, amb un cost $O(n \times \log(n))$ degut a la necessitat de calcular distàncies i ordenar les peticions per proximitat. La qualitat de la solució inicial és moderada, ja que es basa en la proximitat geogràfica, però no té en compte altres factors com les penalitzacions de les peticions. Aquesta estratègia pot ser útil per a problemes on la proximitat és un factor important, però pot no ser suficient per obtenir bones solucions en problemes més complexos.
 - **Inicialització Greedy:** Aquesta estratègia assigna les peticions als camions de manera que es maximitzi el benefici immediat, tenint en compte els ingressos per petició, els costos de transport i les penalitzacions per no atendre peticions. Aquesta estratègia és la més complexa de les tres, amb un cost $O(n^2)$ degut a la necessitat d'avaluar múltiples opcions d'assignació per maximitzar el benefici. La qualitat de la solució inicial és alta, ja que es basa en una anàlisi detallada dels costos i beneficis associats a cada petició. Aquesta estratègia serà la més recomanable, ja que partint d'una bona solució inicial, els algorismes de cerca local tindran menys feina per millorar-la i podran trobar solucions òptimes més ràpidament.
 
 ### 3.3. Els operadors de cerca
 
-Els operadors de cerca són les funcions que permeten explorar l'espai d'estats veïns a partir d'un estat actual. És important dissenyar operadors que permetin una exploració efectiva de l'espai d'estats, que evitin sortir de l'espai de solucions vàlides, que tinguin un cost computacional raonable i que peretin explorar tot l'espai de solucions.
+**Els operadors de cerca són les funcions que permeten explorar l'espai d'estats** veïns a partir d'un estat actual. És important dissenyar operadors que permetin una exploració efectiva de l'espai d'estats, que evitin sortir de l'espai de solucions vàlides, que tinguin un cost computacional raonable i que peretin explorar tot l'espai de solucions.
 Hem implementat tres operadors principals:
 
-- **``swapCentres``:** Aquest operador intercanvia els centres de distribució assignats a dos camions diferents, que és el mateix que intercanviar les peticions assignades als camions. Això permet explorar diferents configuracions d'assignació de peticions als centres, i pot ajudar a trobar solucions més òptimes. El factor de ramificació d'aquest operador és, aproximadament, $O(m^2)$, on m és el nombre de camions, ja que es poden intercanviar qualsevol parell de camions.
+- **``swapCentres``:** Aquest operador intercanvia els centres de distribució assignats a dos camions diferents, que és el mateix que intercanviar les peticions assignades als camions. Això permet explorar diferents configuracions d'assignació de peticions als centres, i pot ajudar a trobar solucions més òptimes. El factor de ramificació d'aquest operador és, aproximadament, $O(m^2)$, on $m$ és el nombre de camions, ja que es poden intercanviar qualsevol parell de camions.
 - **``mourePeticio``:** Aquest operador mou una petició d'un camió a un altre, sempre que es compleixin les restriccions de capacitat i distància. Això permet ajustar l'assignació de peticions de manera més fina, i pot ajudar a millorar la qualitat de la solució. El factor de ramificació d'aquest operador és, aproximadament, $O(n \times m)$, on $n$ és el nombre de peticions i $m$ és el nombre de camions, ja que cada petició pot ser moguda a qualsevol camió.
 - **``intercanviarPeticions``:** Aquest operador intercanvia dues peticions assignades a dos camions diferents, sempre que es compleixin les restriccions de capacitat i distància. Això permet explorar configuracions alternatives d'assignació de peticions, i pot ajudar a trobar solucions més òptimes. El factor de ramificació d'aquest operador és, aproximadament, $O(n^2)$, on $n$ és el nombre de peticions, ja que es poden intercanviar qualsevol parell de peticions.
 
 ### 3.4. La funció heurística
 
-La funció heurística és el criteri que utilitzen els algorismes de cerca local per avaluar la qualitat d'un estat i decidir quins estats explorar a continuació. El rendiment de l'algorisme depèn en gran mesura de la funció heurística utilitzada, ja que aquesta determina quins estats es consideren millors i quins pitjors. En aquest problema de distribució logística, la funció heurística que hem escollit està regida per **maximitzar el benefici total** considerant tres components fonamentals: els ingressos dels serveis prestats, els costos operacionals i les penalitzacions per peticions no ateses.
+**La funció heurística és el criteri que utilitzen els algorismes de cerca local per avaluar la qualitat d'un estat** i decidir quins estats explorar a continuació. El rendiment de l'algorisme depèn en gran mesura de la funció heurística utilitzada, ja que aquesta determina quins estats es consideren millors i quins pitjors. En aquest problema de distribució logística, la funció heurística que hem escollit està regida per **maximitzar el benefici total** considerant tres components fonamentals: els ingressos dels serveis prestats, els costos operacionals i les penalitzacions per peticions no ateses. Es calcula com:
 
 Els ingressos depenen del preu base $P$ i d'un factor de preu que penalitza les peticions pendents. El factor de preu es defineix com:
 
@@ -392,7 +422,7 @@ $$
 I = \sum_{p \in S} P \cdot f(d_p)
 $$
 
-Per que fa als costos operacionals, aquests es basen en la distància recorreguda pels camions des dels centres de distribució fins a les gasolineres i tornada:
+Pel que fa als costos operacionals, aquests es basen en la distància recorreguda pels camions des dels centres de distribució fins a les gasolineres i tornada:
 
 La distància entre dues ubicacions es calcula amb la mètrica de Manhattan:
 
@@ -440,7 +470,7 @@ $$
 
 Aquesta funció permet comparar diferents estats durant la cerca local: **estats amb major benefici total es consideren de millor qualitat**. Els algorismes de cerca local utilitzaran aquesta funció per decidir si accepten o rebutgen modificacions proposades pels operadors, sempre buscant maximitzar $B_{\text{total}}$.
 
-La funció heurística escollida per avaluar els estats en aquest problema de cerca local respon a una lògica alineada amb l'objectiu operatiu i econòmic del problema de distribució logística. Aquesta funció suma els ingressos generats per les entregues efectuades, resta el cost total dels desplaçaments realitzats pels vehicles i incorpora una penalització addicional per aquelles peticions que queden pendents, considerant la pèrdua de valor associada al temps d'espera. Això permet reflectir fidelment les prioritats del sistema logístic: maximitzar el benefici real, minimitzar la pèrdua de valor per serveis endarrerits i controlar l'eficiència de l'ús de recursos. En conseqüència, la funció es defineix així
+La funció heurística escollida per avaluar els estats en aquest problema de cerca local respon a una lògica alineada amb l'objectiu operatiu i econòmic del problema de distribució logística. Aquesta funció suma els ingressos generats per les entregues efectuades, resta el cost total dels desplaçaments realitzats pels vehicles i incorpora una penalització addicional per aquelles peticions que queden pendents, considerant la pèrdua de valor associada al temps d'espera. Això permet reflectir fidelment les prioritats del sistema logístic: maximitzar el benefici real, minimitzar la pèrdua de valor per serveis endarrerits i controlar l'eficiència de l'ús de recursos. En conseqüència, la funció es defineix així:
 
 $$
 B_{\text{total}} = \sum_{p \in S} P \cdot f(d_p) - C_k \cdot \sum_{i=1}^{t} L_i - \sum_{u \in U} P \cdot (f(d_u) - f(d_u + 1))
@@ -480,7 +510,7 @@ Finalment, la simplicitat de càlcul de l'heurística $O(n)$, on $n$ és el nomb
 
 ## 4. Implementació en Python
 
-Hem implementat la representació del problema i els algorismes de cerca local utilitzant Python, aprofitant la biblioteca `aima3` per a la gestió dels algorismes de cerca local. La implementació es divideix en diversos arxius per mantenir el codi organitzat i modular:
+Hem implementat la representació del problema i els algorismes de cerca local utilitzant Python, aprofitant la llibreria `aima3` per a la gestió dels algorismes de cerca local. La implementació es divideix en diversos arxius per mantenir el codi organitzat i modular:
 
 - **``camions_estat.py``:** Aquest arxiu conté la implementació de la classe `StateRepresentation`, que representa l'estat del problema. Aquesta classe inclou la implementació de la funció heurística així com totes les funcions auxiliars per a que funcioni correctament, els generadors de les diferents solucions inicials i la generació i aplicació dels operadors de cerca local.
 - **``camions_operadors.py``:** En aquest arxiu implementem la classe `CamionsOperator`, que defineix els operadors de cerca local utilitzats per explorar l'espai d'estats. Aquesta classe inclou la implementació de les classes dels operadors `swapCentres`, `mourePeticio` i `intercanviarPeticions`.
@@ -492,12 +522,11 @@ Hem implementat la representació del problema i els algorismes de cerca local u
 
 ### 5.1 Experiment 1: Selecció d'Operadors
 
-Com s'ha explicat abans, hem implementat tres operadors diferents per a la cerca local: **`swapCentres**, **mourePeticio** i **intercanviarPeticions`**. Aquest experiment té com a objectiu avaluar l'impacte de cadascun d'aquests operadors en la qualitat de les solucions obtingudes i en el temps d'execució dels algorismes de cerca local (Hill Climbing i Simulated Annealing).
+Com s'ha explicat abans, hem implementat tres operadors diferents per a la cerca local: **`swapCentres`**, **`mourePeticio`** i **`intercanviarPeticions`**. Aquest experiment té com a objectiu avaluar l'impacte de cadascun d'aquests operadors en la qualitat de les solucions obtingudes i en el temps d'execució dels algorismes de cerca local (Hill Climbing i Simulated Annealing).
 
 #### 5.1.1 Plantejament del problema
 
-Ens plantegem la següent qüestió de recerca: dels 3 operadors implementats, són tots realment útils per millorar les solucions obtingudes pels algorismes de cerca local? O n'hi ha algun que no aporta cap benefici addicional i només incrementa el temps d'execució?
-Si hi hagués algún operador que no aportés cap millora significativa en la qualitat de les solucions, podríem eliminar-lo per reduir el temps d'execució dels algorismes sense perdre qualitat en els resultats.
+Ens plantegem la següent qüestió de recerca: dels 3 operadors implementats, són tots realment útils per millorar les solucions obtingudes pels algorismes de cerca local? O n'hi ha algun que no aporta cap benefici addicional i només incrementa el temps d'execució? Si hi hagués algun operador que no aportés cap millora significativa en la qualitat de les solucions, podríem eliminar-lo per reduir el temps d'execució dels algorismes sense perdre qualitat en els resultats.
 Aleshores, proposem la hipòtesi nul·la i les hipòtesis alternatives següents:
 
 - $H_0$: Tots els operadors contribueixen de manera significativa a l'augment del benefici obtingut pels algorismes de cerca local.
@@ -515,7 +544,7 @@ Les combinacions d'operadors que avaluarem són les següents:
 - *`swapCentres` + `mourePeticio`*
 - *`swapCentres` + `mourePeticio` + `intercanviarPeticions`*
 
-Per a cada combinació d'operadors, realitzarem 5 rèpliques amb seeds diferents (1234, 1235, ..., 1243), registrant per a cada rèplica:
+Per a cada combinació d'operadors, realitzarem 10 rèpliques amb seeds diferents (1234, 1235, ..., 1243), registrant per a cada rèplica:
 
 - El benefici obtingut
 - El nombre de peticions servides i pendents
@@ -528,7 +557,7 @@ Posteriorment, calcularem la mitjana i desviació típica dels resultats per a c
 
 #### 5.1.3 Resultats
 
-Aquests hen sigut els resultats obtinguts en l'experiment d'avaluació d'operadors, per a diferentes seeds:
+Aquests han sigut els resultats obtinguts en l'experiment d'avaluació d'operadors, per a diferentes seeds:
 
 <div class="table-container">
   <table>
@@ -584,7 +613,7 @@ Aquests hen sigut els resultats obtinguts en l'experiment d'avaluació d'operado
 
 1. *Benefici mitjà i desviació estàndard per a cada conjunt d'operadors*: A la taula podem observar que tots els conjunts d'operadors obtenen un benefici mitjà molt similar, al voltant dels 76.000 euros, amb una desviació estàndard propera als 5.460 euros. Això indica que la qualitat de les solucions és força consistent entre els operadors, i que cap d'ells destaca clarament en termes de benefici final. El fet de que les diferències siguin tan petites suggereix que els operadors no generen espais de cerca radicalment diferents: tots exploren veinats amb característiques similars i acaben trobant solucions comparables.
 
-2. *Temps d'execució mitjà i desviació estàndard per a cada conjunt d'operadors*: El temps mitjà d'execució és el principal factor diferenciador: veiem que l'operador **`mourePeticio`** és el més ràpid, amb un temps mitjà d'uns 270.3 ms, mentre que la combinació de (**`swapCentres` + `mourePeticio`**) és la més lenta, amb un temps mitjà proper als 230 ms.
+2. *Temps d'execució mitjà per a cada conjunt d'operadors*: El temps mitjà d'execució és el principal factor diferenciador: veiem que l'operador **`mourePeticio`** és el més ràpid, amb un temps mitjà d'uns 244.81ms, mentre que la combinació de (**`swapCentres` + `mourePeticio`**) és la més lenta, amb un temps mitjà de 279.77 ms.
 
 3. *Peticions servides i pendents:* el nombre de peticions servides i pendents és el mateix per a totes les combinacions d'operadors. Això reforça la idea que els diferents operadors no generen solucions radicalment diferents en termes de cobertura de peticions.
 
@@ -594,15 +623,15 @@ Aquests hen sigut els resultats obtinguts en l'experiment d'avaluació d'operado
 
 Els resultats mostren que tots els conjunts d’operadors aconsegueixen un benefici mitjà molt similar, al voltant dels 76.000 €, i que el nombre de peticions servides, les pendents i els quilòmetres totals recorreguts pràcticament no varien entre configuracions. Les diferències de benefici entre el pitjor i el millor conjunt (uns 100 € sobre 76.000 €) són molt petites, de l’ordre d’un 0,1–0,2 %, i per tant no es pot dir que cap operador “marqui la diferència” en la qualitat de les solucions.
 
-Pel que fa al temps, sí que s’observen diferències: el conjunt més ràpid és mourePeticio (uns 245 ms de mitjana), mentre que swapCentres + mourePeticio és el més lent (uns 280 ms), i les combinacions amb intercanviarPeticions queden en un terme mig. Atès que el benefici obtingut és pràcticament idèntic, el temps d’execució es converteix en el factor clau per escollir quins operadors utilitzar.
+Pel que fa al temps, sí que s’observen diferències: el conjunt més ràpid és mourePeticio (uns 245 ms de mitjana), mentre que ``swapCentres`` + ``mourePeticio`` és el més lent (uns 280 ms), i les combinacions amb ``intercanviarPeticions`` queden en un terme mig. Atès que el benefici obtingut és pràcticament idèntic, el temps d’execució es converteix en el factor clau per escollir quins operadors utilitzar.
 
 En relació amb les hipòtesis:
 
-- $H_0$ afirmava que tots els operadors contribueixen de manera significativa a l’augment del benefici. Els resultats apunten més aviat al contrari: afegir nous operadors només aporta millores molt modestes i dins del marge de variabilitat, de manera que no hi ha evidència per mantenir $H_0$.
-- $H_{1_a}$  proposava que hi ha almenys un operador que no aporta cap millora significativa en la qualitat de les solucions. Com que el benefici i les altres mètriques pràcticament no canvien en funció del conjunt d’operadors, $H_{1_a}$ queda raonablement suportada: es pot prescindir d’alguns operadors sense perdre qualitat apreciable.
-- $H_{1_b}$ plantejava que alguna combinació d’operadors ofereix un bon equilibri entre qualitat i temps. En el nostre cas, mourePeticio com a únic operador és el que presenta aquest equilibri més clar: obté un benefici mitjà pràcticament idèntic al de la resta de combinacions, però amb un dels temps d’execució més baixos i una implementació més senzilla.
+- $H_0$ afirmava que tots els operadors contribueixen de manera significativa a l’augment del benefici. Els resultats apunten més aviat al contrari: afegir nous operadors només aporta millores molt modestes i dins del marge de variabilitat, de manera que **no hi ha evidència per mantenir** $H_0$.
+- $H_{1_a}$  proposava que hi ha almenys un operador que no aporta cap millora significativa en la qualitat de les solucions. Com que el benefici i les altres mètriques pràcticament no canvien en funció del conjunt d’operadors, $H_{1_a}$ **queda raonablement suportada**: es pot prescindir d’alguns operadors sense perdre qualitat apreciable.
+- $H_{1_b}$ plantejava que alguna combinació d’operadors ofereix un bon equilibri entre qualitat i temps. En el nostre cas, ``mourePeticio`` com a únic operador és el que presenta aquest equilibri més clar: obté un benefici mitjà pràcticament idèntic al de la resta de combinacions, però amb un dels temps d’execució més baixos i una implementació més senzilla. Per tant, $H_{1_b}$ **queda acceptada** pels resultats.
 
-En consequència, per a la resta de la pràctica és raonable simplificar la cerca local utilitzant només l'operador mourePeticio. Aquesta elecció redueix lleugerament el temps i la complexitat de l'algorisme, mantenint una qualitat de solució comparable a la de les combinacions amb més operadors.
+En consequència, per a la resta de la pràctica és raonable simplificar la cerca local utilitzant només l'operador ``mourePeticio``. Aquesta elecció redueix lleugerament el temps i la complexitat de l'algorisme, mantenint una qualitat de solució comparable a la de les combinacions amb més operadors.
 
 ### 5.2 Experiment 2: Estratègia d'Inicialització
 
@@ -726,7 +755,7 @@ Per a respondre aquestes qüestions, plantegem les següents hipòtesis:
 
 #### 5.3.2 Mètode
 
-Per a resoldre aquesta questió, començarem dissenyant un experiment de calibratge sistemàtic dels paràmetres de Simulated Annealing, definint una graella de valors per a cada paràmetre, executant múltiples rèpliques per a cada combinació i analitzant el comportament de l'algorisme. En pirmer lloc, fixem la configuració base de 10 centres de distribució amb multiplicitat 1 i 100 gasolineres. Per al Simulated Annealing emprarem un esquema de temperatura exponencial del tipus $T(t) = k \cdot e^{-\lambda t}$, on $k$ és l'escala de la temperatura inicial, $λ$ la taxa de refredament i $t$ el nombre d’iteracions. El nombre d'iteracions de l'algorisme ve determinat pel paràmetre `limit`, que en el nostre cas juga el paper *d'iteracions per temperatur*a del plantejament teòric.
+Per a resoldre aquesta qüestió, començarem dissenyant un experiment de calibratge sistemàtic dels paràmetres de Simulated Annealing, definint una graella de valors per a cada paràmetre, executant múltiples rèpliques per a cada combinació i analitzant el comportament de l'algorisme. En primer lloc, fixem la configuració base de 10 centres de distribució amb multiplicitat 1 i 100 gasolineres. Per al Simulated Annealing emprarem un esquema de temperatura exponencial del tipus $T(t) = k \cdot e^{-\lambda t}$, on $k$ és l'escala de la temperatura inicial, $λ$ la taxa de refredament i $t$ el nombre d’iteracions. El nombre d'iteracions de l'algorisme ve determinat pel paràmetre `limit`, que en el nostre cas juga el paper *d'iteracions per temperatur*a del plantejament teòric.
 Per explorar l'efecte dels paràmetres definim una graella de valors:
 
 - `limit` $\in \set{200, 500, 1000}$
@@ -739,7 +768,7 @@ Això ens deixa $3 \times 4 \times 4=48$ configuracions diferents de Simulated A
 - El temps d'execució
 
 A partir de les 10 rèpliques, calculem la mitjana del benefici, obtenint així una mesura del rendiment per a cada combinació.
-Aquest primer experiment ens permet identificar els paràmmetres amb els que obtenim un major benefici i, comparar per a un mateix `limit`, com influeixen ``k`` i ``λ`` en la qualitat de les solucions.
+Aquest primer experiment ens permet identificar els paràmetres amb els que obtenim un major benefici i, comparar per a un mateix `limit`, com influeixen ``k`` i ``λ`` en la qualitat de les solucions.
 
 En una segona fase, escollim la combinació de paràmetres que ha mostrat millor comportament a l’experiment anterior, i analitzem de manera més detallada l’evolució del cost al llarg de les iteracions sobre una instància fixa del problema.
 
@@ -801,7 +830,7 @@ Una vegada seleccionats els millors paràmetres, analitzem el comportament detal
 </div>
 
 En la part superior de la figura, la corba d’Hill Climbing mostra una disminució quasi monòtona del cost a partir de l’estat inicial, passant aproximadament de -71910 fins a −72040 en només cinc passos, després dels quals el cost es manté estable.​ Això indica que, amb el veïnatge definit, Hill Climbing arriba molt ràpidament a un òptim local des del qual cap veí accessible amb un sol moviment millora el benefici, ja que l’algorisme només fa passos quan troba un estat amb millor valor de la funció objectiu. La part inferior de la figura representa l'evolució del cost per a Simulated Annealing amb els paràmetres calibrats, i es veu que el cost comena en un valor similar al Hill Climbing, però que només millora lleugerament cap al pas 20, on baixa uns pocs punts fins a un valor aproximat de -71940.
-A partir d’aquest punt, la corba resta pràcticament horitzontal al llarg de les primeres 100 iteracions representades, cosa que indica que l’algorisme ja no troba moviments que millorin el cost o bé que la temperatura ja és prou baixa com perquè la probabilitat d’acceptar moviments pitjors sigui molt reduïda. Comparant amb Hill Climbing, s’observa que el cost final de Simulated Annealing és clarament superior (menys negatiu) al d’Hill Climbing, fet que implica un benefici total menor malgrat utilitzar uns paràmetres de Simmulated Annealing que, en mitjana, havien resultat els millors en l’experiment de graella.
+A partir d’aquest punt, la corba resta pràcticament horitzontal al llarg de les primeres 100 iteracions representades, cosa que indica que l’algorisme ja no troba moviments que millorin el cost o bé que la temperatura ja és prou baixa com perquè la probabilitat d’acceptar moviments pitjors sigui molt reduïda. Comparant amb Hill Climbing, s’observa que el cost final de Simulated Annealing és clarament superior (menys negatiu) al d’Hill Climbing, fet que implica un benefici total menor malgrat utilitzar uns paràmetres de Simulated Annealing que, en mitjana, havien resultat els millors en l’experiment de graella.
 
 #### 5.3.4 Conclusions
 
@@ -987,23 +1016,10 @@ Anàlisi segons la mida del problema:
 
 #### 5.4.4 Conclusions
 
-A partir de l'experiment, podem extreure les seguents conclusions:
-
-Respecte a la hipòtesi nul·la $H_0$:
-
-**Rebutgem la hipòtesi nul·la $H_0$**, ja que hem observat diferències significatives en el temps d'execució entre ambdós algorismes a mesura que augmenta la mida del problema, tot i que la qualitat de les solucions obtingudes és similar.
-
-Respecte a $H_{1_a}$ (qualitat de solucions):
-
-**Rebutgem la hipòtesi $H_{1_a}$**, ja que no hem trobat diferències significatives en la qualitat de les solucions obtingudes per ambdós algorismes. Tant Hill Climbing com Simulated Annealing proporcionen beneficis similars a mesura que augmenta la mida del problema.
-
-Respecte a $H_{1_b}$ (temps d'execució):
-
-**Acceptem la hipòtesi $H_{1_b}$**, ja que Simulated Annealing és significativament més ràpid que Hill Climbing a mesura que augmenta la mida del problema. SA manté un temps d'execució molt més baix, fent-lo més adequat per a problemes grans.
-
-Respecte a $H_{1_c}$ (escalabilitat):
-
-**Acceptem la hipòtesi $H_{1_c}$**, ja que el temps d'execució creix de manera no lineal amb la mida del problema per ambdós algorismes. Hill Climbing mostra un creixement exponencial, mentre que Simulated Annealing presenta un creixement més controlat.
+- **Hipòtesi $H_0$** : Els resultats mostren que el benefici obtingut per Hill Climbing i Simulated Annealing és molt similar per totes les mides analitzades, amb diferències petites i dins de la variabilitat experimental. Per tant, **no es pot rebutjar** $H_0$: no s’observen diferències significatives en la qualitat de les solucions entre ambdós algorismes en escenaris d’escalat.
+- **Hipòtesi $H_{1_a}$** : Tot i que en alguns casos Simulated Annealing tendeix a obtenir lleugerament més benefici que Hill Climbing, aquesta millora és modesta i no es pot considerar clarament significativa. En conseqüència, $H_{1_a}$ només rep un suport parcial i no es pot afirmar de manera contundent que SA proporcioni solucions de qualitat superior.
+- **Hipòtesi $H_{1_b}$** : Les mesures de temps indiquen just el contrari del que planteja la hipòtesi: Simulated Annealing és sistemàticament més ràpid que Hill Climbing, i la diferència de temps s’accentua quan creix la mida del problema. Per tant, $H_{1_b}$ **es rebutja**, i en termes de temps d’execució l’algorisme recomanable és Simulated Annealing.
+- **Hipòtesi $H_{1_c}$**: En ambdós casos, l’increment de temps amb la mida del problema és clarament no lineal, amb un creixement especialment acusat per a Hill Climbing. Això confirma $H_{1_c}$ i posa de manifest la importància de considerar el comportament asimptòtic: per instàncies grans, l’algorisme amb millor escalabilitat temporal (Simulated Annealing) esdevé clarament preferible.
 
 Per tant, podem concloure dient que **Simulated Annealing és l'algorisme més adequat per a problemes de gran escala** en aquest domini, ja que ofereix un millor compromís entre temps d'execució i qualitat de les solucions obtingudes. Això és especialment rellevant en aplicacions pràctiques on el temps de computació és crític. També hem pogut confirmar que els paràmetres òptims obtinguts en l'experiment 3 es mantenen adequats en augmentar la mida del problema i que l'ús del generador d'accions limitat és efectiu per a Simulated Annealing.
 
@@ -1096,16 +1112,116 @@ Podem observar que la configuració amb 10 centres i 1 camió per centre proporc
 
 #### 5.5.4 Conclusions
 
-Els resultats refuten la hipòtesi nul·la $H_0$: reduir de 10 a 5 centres amb el mateix nombre de camions impacta clarament en benefici, quilòmetres i peticions servides. La configuració amb 10 centres obté molt més benefici i serveix més peticions, però recorre més quilòmetres i necessita més temps d’execució.
+Els resultats mostren que reduir de 10 a 5 centres de distribució, mantenint constant el nombre total de camions, té un impacte clar en el benefici econòmic, en els quilòmetres recorreguts i en el nombre de peticions servides. La configuració amb 10 centres obté un benefici molt més elevat i serveix més peticions, tot i que implica recórrer més quilòmetres i un temps d’execució una mica superior.
 
-Les dades mostren diferències clares entre configuracions: **H0 es rebutja**, **H1a s’accepta** i **H1b es rebutja** atesa l’assumpció de cost zero dels centres i els resultats obtinguts. En concret, per a respondre les hipòtesis plantejades:
-
-- $H_0$: rebutjada; el benefici, els km i les peticions servides varien substancialment entre 5 i 10 centres (benefici 42,706.40€ vs 76,400.00€; km 2,073.80 vs 2,516.00; servides 48.6 vs 82.5), de manera que hi ha efectes significatius del nombre de centres.
-- $H_1$: acceptada; amb 10 centres s’aconsegueix **més benefici** i **més peticions servides** que amb 5 centres (76,400.00€ i 82.5 vs 42,706.40€ i 48.6), confirmant l’efecte positiu d’una xarxa més distribuïda en qualitat de servei i ingressos.
+- $H_0$: **rebutjada** Les dades mostren diferències substancials entre les dues configuracions: amb 5 centres el benefici mitjà és d’uns 42 706,40 €, mentre que amb 10 centres s’arriba aproximadament a 76400,00 €; els quilòmetres totals passen de 2073,80 a 2516,00 i les peticions servides de 48,6 a 82,5. Això indica que la reducció del nombre de centres afecta de manera significativa totes tres magnituds (benefici, quilòmetres i peticions servides), de manera que no es pot mantenir la hipòtesi de “no efecte” plantejada a $H_0$.
+- $H_1$: **acceptada**. La configuració amb 10 centres i 1 camió per centre proporciona un benefici sensiblement superior i permet atendre moltes més peticions que la configuració amb 5 centres i 2 camions per centre, tot i que augmenten lleugerament els quilòmetres i el temps d’execució. Això confirma que una xarxa més distribuïda de centres, en aquest escenari sense cost fix associat als centres, millora la qualitat de servei i els ingressos respecte a l’estratègia de consolidació.
 
 Per tant, en aquest context específic on els centres no tenen cost associat, **mantenir un nombre més alt de centres és clarament útil per maximitzar el benefici** i la capacitat de servei. No obstant això, en un escenari realista on els centres impliquin costos fixos, aquesta conclusió podria variar i requeriria una anàlisi més detallada. Així mateix, la major quantitat de quilòmetres recorreguts i el temps d’execució més elevat amb 10 centres indiquen un compromís entre eficiència operativa i costos logístics que hauria de ser considerat en decisions reals de disseny de xarxes de distribució.
 
 ### 5.6 Experiment 6: Sensibilitat al Cost per km
+
+En la pràctica veiem que inicialment ens donen com a cost per quilòmetre 2, per tant amb aquest experiment volem saber quin impacte real té sobre el nostre algoritme de hill climbing, i sobretot quin impacte té al nostre benefici i el nombre de peticions servides.
+
+#### 5.6.1 Plantejament de l'experiment
+
+En aquest experiment ens plantejem la següent qüestió: **Quin és l'efecte que pot tenir l'augment del cost en el nostre nombre de peticions servides?**
+Addicionalment, també ens preguntem:
+
+- Quin efecte tindrà aquest augment del cost en el nostre benefici?
+- Hi ha una tendència en el nombre de peticions servides amb l'augment del cost?
+
+Per respondre a aquestes preguntes ens plantegem les següents hipòtesis:
+
+- $H_0$: L'augment del cost reduirà lleugerament el nostre nombre de peticions servides.
+- $H_{1_a}$: Com servirem menys peticions, el nostre benefici també es reduirà.
+- $H_{1_b}$: Veurem una petita tendència decreixent en el nombre de peticions servides.
+
+#### 5.6.2 Mètode
+
+Per poder resoldre la qüestió plantejada, farem un experiment on, agafarem 10 rèpliques de "seeds" diferents amb diferents costos per quilòmetre, en el nostre cas, els costos per quilòmetre seran: 2, 4, 8, 16, 32, 64. D'aquesta manera veurem si hi ha un impacte real amb l'ncrement del nostre cost. A continuació agafarem la mitjana de les 10 rèpliques de cada cas, d'aquesta manera ho podrem comparar amb més precisió.
+
+#### 5.6.3 Resultats
+
+Després de fer l'execució del nostre experiment, els resultats obtinguts són:
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Cost/km</th>
+        <th>%Servides</th>
+        <th>Benefici</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2</td>
+        <td>73.93</td>
+        <td>85162.80</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>74.47</td>
+        <td>77720.00</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>75.51</td>
+        <td>67610.00</td>
+      </tr>
+      <tr>
+        <td>16</td>
+        <td>58.15</td>
+        <td>45791.20</td>
+      </tr>
+      <tr>
+        <td>32</td>
+        <td>25.30</td>
+        <td>16352.40</td>
+      </tr>
+      <tr>
+        <td>64</td>
+        <td>8.66</td>
+        <td>3599.20</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="table-caption">
+    Taula 5: Mitjana de percentatge de peticions servides i benefici per cada escenari.
+  </div>
+</div>
+
+A la taula podem veure una reducció molt dràstica del benefici i sobretot del percentatge de peticions servides, per poder veure amb més claritat els nostres resultats, i també poder veure la variància de cada cas, farem els gràfics en boxplot del benefici i del percentatge de peticions servides.
+
+<div class="image-row">
+  <div class="image-column">
+    <img src="./experiments/resultats/6/benefici6.png" alt="Boxplots de representació del benefici">
+    <div class="caption">Figura 9: Boxplot del benefici en cada escenari del cost/km.
+    </div>
+  </div>
+</div>
+
+<div class="image-row">
+  <div class="image-column">
+    <img src="./experiments/resultats/6/pet_servides.png" alt="Boxplots de representació de peticions servides">
+    <div class="caption">Figura 10: Boxplot del percentatge de peticions servides en cada escenari de cost/km.
+    </div>
+  </div>
+</div>
+
+Inicialment, veiem una clara caiguda a partir del cost per quilòmetre de 16, però podem veure que no es segueix la mateixa tendència en les dues variables que estudiem. En el benefici, podem veure un descens molt més escalat i lineal, en canvi, podem veure com al nombre de peticions servides té un descens molt directe, ja que fins al cost de 8 per quilòmetre, les nostres peticions servides es mantenen en un rang foça estable i sense mostrar gaire descens, però a partir dels 16, veiem una caiguda exponencial fins arribar al 8% quan tenim 64€/km. Aquests dos comportaments tant diferents es deuen principalment al fet de que, com als primers tres casos tenim un nombre similar de peticions servides, el nostre benefici només es veu afectat pel augment del cost, en canvi, en els següents escenaris, com el nostre nombre de peticions servides disminueix, el benefici també. Per tant, en el descens del benefici es junta la pujada del cost i la reducció de peticions servides, amb això podem explicar aquest descens.
+És cert que veiem un descens pràcticament exponencial en els 2 casos, però al tenir en compte que els nostres escenaris augmenten el cost de manera exponencial, podem dir per tant, que el nostre descens és força lineal. Sí que podem matisar que, el nombre de peticions servides té un descens molt més exponencial que el benefici.
+
+#### 5.6.4 Conclusió
+
+Tenint en compte els nostres resultats tant com de les gràfiques, com de la taula, podem dir que és cert que l'augment del cost per quilòmetre té un impacte en el percentatge de peticions servides, per tant podem concluore que:
+
+- $H_0$: Després de veure els gràfics, podem dir que el percentatge de peticions servides disminuirà de manera linear a partir d'un cert cost per quilòmetre, en el nostre cas 8. Amb un cost inferior, el percentatge de peticions servides es reduirà molt lleugerament. Per tant, **hem de rebutjar la nostra hipòtesi inicial.**
+- $H_{1_a}$: Com a hipòtesi haviém dir que la reducció de peticions és el que afectaria al benefici, però després dels nostres resultats podem dir que aquesta hipòtesi és parcialment certa. Ja que el nostre benefici també es veurà afectat pel propi cost per quilòmetre, i que per molt que seguíssim tenint el mateix percentatge de peticions servides, el nostre benefici inevitablement seguiria baixant. Degut a que no estem amb una hipòtesi totalment correcta, **l'hem de rebutjar.**
+- $H_{1_b}$: En la nostra hipòtesi havíem dit que el nombre de peticions servides tindria una lleu tendència decreixent, cosa que hem comprovat que no. La nostra tendència sí que és decreixent, però la podem dividir en 2 trams. Un on podem observar una certa estabilitat i amb un lleu descens, i el segon tram amb molt poca estabilitat i un descens molt brusc. Per tant, aquesta hipòtesi també **la hem de rebutjar.**
+
+Per tant, podem dir que el nostre experiment ens ha mostrat un impacte molt més dinàmic i significant en les nostres peticions servides del que esperàvem, de manera que podem concluore que si s'augmenta el cost per quilòmetre, s'ha de tenir en compte totes les repercusions que hi poden haver en termes de beneficis i peticions servides.
 
 ### 5.7 Experiment 7: Variació de l'Horari Laboral
 
@@ -1126,7 +1242,7 @@ Per respondre aquestes qüestions ens plantejem les següents hipòtesis:ç
 
 #### 5.7.2 Mètode
 
-Per poder resoldre aquesta qüestió proposada, farem un experiment on, farem 10 rèpliques amb cada situació, que seran: el temps inicial/estàndard (8 hores), un amb temps reduit (7 hores) i finalment dos amb el temps augmentat (9 hores i 10 hores). D'aquesta manera podrem veure si incrementa o no el benefici en cada cas, i si té una relació proporcional o no. En l'experiment mesurarem el nostre benefici total, el cost total, la penalització de peticions perdudes. D'aquesta manera podrem valorar si amb més/menys temps es pot aprofitar o no.
+Per poder resoldre aquesta qüestió proposada, farem un experiment on, farem 10 rèpliques amb cada situació, que seran: el temps inicial/estàndard (8 hores), un amb temps reduït (7 hores) i finalment dos amb el temps augmentat (9 hores i 10 hores). D'aquesta manera podrem veure si incrementa o no el benefici en cada cas, i si té una relació proporcional o no. En l'experiment mesurarem el nostre benefici total, el cost total, la penalització de peticions perdudes. D'aquesta manera podrem valorar si amb més/menys temps es pot aprofitar o no.
 
 #### 5.7.3 Resultats
 
@@ -1179,7 +1295,7 @@ Després d'executar el codi per fer l'experiment, els resultats obtinguts són e
     </tbody>
   </table>
   <div class="table-caption">
-    Taula n + 1: Resultats de l'experiment per cada escenari (mitjanes de 10 rèpliques).
+    Taula 6: Resultats de l'experiment per cada escenari (mitjanes de 10 rèpliques).
     Comparació dels ingressos, costos, penalitzacions, beneficis i percentatge de peticions servides.
   </div>
 </div>
@@ -1189,11 +1305,11 @@ A la taula podem anar veient un augment en certes magnituds, ja que al tenir mé
 <div class="image-row">
   <div class="image-column">
     <img src="./experiments/resultats/7/exp7.png" alt="Boxplots de representació de la taula">
-    <div class="caption">Figura n + 1: Boxplots de les mitjanes de 10 rèpliques de cada escenari de ingressos, % peticions, costos i benefici.</div>
+    <div class="caption">Figura 11: Boxplots de les mitjanes de 10 rèpliques de cada escenari de ingressos, % peticions, costos i benefici.</div>
   </div>
 </div>
 
-Com podem veure als gràfics, sí que augmenten els beneficis, però arriba a un sostre, ja que al haver-hi la limmitació de viatges per camió, hi haurà un punt on ja no es poden complir més peticions, i per tant, ja no farem més ingressos. Podem veure com el % de peticions oscila entre el 72% - 76%, i per tant, podem assumir, que hi haurà un límit sobre el 80%. Per tant, hi haurà un punt on més quilòmetres no ens serviran de res per millorar els nostres beneficis sinó que només pujaran el cost, ja que es faran viatges més llargs.
+Com podem veure als gràfics, sí que augmenten els beneficis, però arriba a un sostre, ja que al haver-hi la limitació de viatges per camió, hi haurà un punt on ja no es poden complir més peticions, i per tant, ja no farem més ingressos. Podem veure com el % de peticions oscila entre el 72% - 76%, i per tant, podem assumir, que hi haurà un límit sobre el 80%. Per tant, hi haurà un punt on més quilòmetres no ens serviran de res per millorar els nostres beneficis sinó que només pujaran el cost, ja que es faran viatges més llargs.
 Aquesta tendència que veiem amb les peticions serà el mateix amb el benefici i ingressos, ja que van relacionades. Un altre aspecte que podem detectar és la variància que hi ha, conforme més alt és el temps en carretera, més petita és, per tant, en aquest aspecte, sí que podem notar un gran impacte positiu en l'augment del temps.
 
 #### 5.7.4 Conclusió
@@ -1228,11 +1344,129 @@ A partir dels resultats de l'[Experiment 1](#51-experiment-1-selecció-doperador
     </tbody>
   </table>
   <div class="table-caption">
-    Taula n + 2: Resultats de l'experiment de validació utilitzant només l'operador <code>swapCentres</code> amb Hill Climbing i inicialització greedy.
-  </div>
+    Taula 7: Resultats de l'experiment de validació utilitzant només l'operador <code>swapCentres</code> amb Hill Climbing i inicialització greedy. </div>
+</div>
 
 Aquí podem veure que utilitzant només l'operador ``swapCentres`` amb Hill Climbing i inicialització greedy, s'obté un benefici mitjà de **76,344.40€** amb un temps d'execució mitjà de **10.81 ms** per a un problema de 10 centres i 100 gasolineres. Aquesta configuració proporciona un benefici lleugerament inferior al de l'Experiment 4 (78,905.33€), on s'utilitzen ambdós operadors, però encara així es manté en un rang alt de qualitat de solució. El temps d'execució és també raonable, tot i ser una mica més alt que l'Experiment 4 (4.71 ms), probablement degut a la menor flexibilitat en l'exploració de l'espai de solucions.
 
 ### 5.9 Experiment 9: Generador d'Operadors
 
-## 5. Conclusions
+Ademés del generador d'operadors `generate_all_actions`, que permet una cerca mmolt completa, però té un cost computacional elevat, hem implementat `generate_actions_lazy`, un generador que nommés considera un subconjunt limmitat d'accions a cada pas, amb l'objectiu de reduir el temps d'execució.
+
+#### 5.9.1 Plantejament del problema
+
+Ens plantegem la seguent qüestió de recerca: podem mantenir un benefici similar al obtingut amb `generate_all_actions` utilitzant `generate_actions_lazy`, i reduint al mateix temps el temps d'execució? A partir d'aquesta pregunta podem formular les seguents hipòtesis:
+
+- $H_0$: No hi han diferències significatives ni en el benefici ni en el temps d'execució entre utilitzar `generate_all_actions` i `generate_actions_lazy`, qualsevol diferència observada es deu només a la variabilitat aleatòria de les instàncies.
+- $H_{1_a}$: el generador `generate_actions_lazy` manté un benefici similar al de `generate_all_actions`.
+- $H_{1_b}$: el generador `generate_actions_lazy` redueix significativament el temps d'execució dels algorismes de cerca local respecte a `generate_all_actions`, oferint un millor compromís entre cost computacional i qualitat de la solució.
+
+#### 5.9.2 Mètode
+
+Per a realitzar aquest experiment, executarem els algorismes de Hill Climbing i de Simulated Annealing amb cadascún dels generadors, mesurant el benefici obtingut i el temps d'execució en mil·lisegons. Hem implementat un script que executa 10 rèpliques independents de Hill Climbing i Simulated Annealing sobre instàncies generades amb seeds diferents.
+Utilitzarem 100 gasolineres i 10 centres de distribució amb multiplicitat 1.
+
+#### 5.9.3 Resultats
+
+<div style="display: flex; gap: 1.5rem; align-items: flex-start; flex-wrap: wrap;">
+
+  <!-- Taula generate_all_actions -->
+  <div class="table-container" style="flex: 1 1 0; min-width: 260px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Algorisme</th>
+          <th>Benefici mitjà (€)</th>
+          <th>Temps mitjà (ms)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Hill Climbing</code></td>
+          <td>76,400.00</td>
+          <td>205.33</td>
+        </tr>
+        <tr>
+          <td><code>Simulated Annealing</code></td>
+          <td>76,390.40</td>
+          <td>26,174.14</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="table-caption">
+      Taula 8: Mitjanes amb <code>generate_all_actions</code>.
+    </div>
+  </div>
+
+  <!-- Taula generate_actions_lazy -->
+  <div class="table-container" style="flex: 1 1 0; min-width: 260px;">
+    <table>
+      <thead>
+        <tr>
+          <th>Algorisme</th>
+          <th>Benefici mitjà (€)</th>
+          <th>Temps mitjà (ms)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Hill Climbing</code></td>
+          <td>76,349.60</td>
+          <td>4.87</td>
+        </tr>
+        <tr>
+          <td><code>Simulated Annealing</code></td>
+          <td>76,390.00</td>
+          <td>1,096.37</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="table-caption">
+      Taula 9: Mitjanes amb <code>generate_actions_lazy</code>.
+    </div>
+  </div>
+
+</div>
+
+Observant les dues taules podem veure que `generate_actions_lazy` redueix de forma enorme el temps d'execució tant de Hill Climbing com de Simulated Annealing: en el Hill Climbing baixa de 205.33ms a 2.87ms, una acceleració d'uns x45. En el Simulated Annealing passa de 26174.14ms a 1096.37ms, una reducció d'aproximadament x24.
+Ademés, manté el benefici pràcticament igual: en el Hill Climmbing passa de 76400 a 76349.6, es perd un 0.07%, una diferència negligible. En el Simulated Annealing passa de 76390.4 a 76390, una diferència de 0.4.
+
+<div class="image-row">
+  <div class="image-column">
+    <img src="./experiments/resultats/9/DefAll.png" alt="Temps d'execució amb generate_all_actions">
+    <div class="caption">
+      Figura 12: Temps d'execució per rèplica utilitzant el generador de totes les accions.
+    </div>
+  </div>
+
+  <div class="image-column">
+    <img src="./experiments/resultats/9/DefLazy.png" alt="Temps d'execució amb generate_actions_lazy">
+    <div class="caption">
+      Figura 13: Temps d'execució per rèplica utilitzant el lazy generator.
+    </div>
+  </div>
+</div>
+
+En aquests gràfics podem veure de forma més visual com el generador d'accions influeix en el temps d'execució del Hill Climbing i el Simulated Annealing.
+
+En el primer gràfic, la corba de Simulated Annealing es mou entre aproximadament 24.000 ms i 33.000 ms en totes les rèpliques, és a dir, entre 24 i 33 segons per execució.​
+La corba de Hill Climbing queda enganxada a la part inferior del gràfic, amb valors de l’ordre de centenars de mil·lisegons (0–500 ms), de manera que visualment és quasi negligible en comparació amb Simmulated Annealing; això confirma que amb veïnat complet Simulated Annealing és dos ordres de magnitud més lent que Hill Climbing.
+
+En el segon gràfic, amb la mateixa escala, Simulated Annealing baixa dràsticament i es manté al voltant d’1–2 segons per rèplica (uns 800–1.800 ms), molt lluny dels 25–30 segons anteriors, mentre que HC passa a tenir temps de l’ordre de poques desenes de mil·lisegons, tant petits que la seva línia pràcticament coincideix amb l’eix X.​
+Com que els dos gràfics comparteixen exactament el mateix rang 0–40.000 ms, es veu clar que el generador lazy redueix el temps de SA aproximadament un factor 20–30 i el d’HC un factor encara més gran, mentre que les línies mantenen una forma semblant (mateix patró de variació entre rèpliques), la qual cosa indica que el comportament qualitatiu dels algorismes no canvia, només el cost temporal de cada iteració.
+
+#### 5.9.4 Conclusions
+
+Els resultats d'aquests experiments permeten **rebutjar clarament la hipòtesi nul·la** $H_0$. No és cert que “no hi hagi diferències” entre `generate_all_actions` i `generate_actions_lazy`: els temps d’execució canvien de forma molt marcada, sobretot en Simulated Annealing, i aquesta diferència és massa gran per poder-la atribuir a la variabilitat aleatòria de les instàncies.
+En canvi, els resultats són plenament coherents amb les dues hipòtesis alternatives. D’una banda, $H_{1_a}$ **queda suportada** perquè el generador `generate_actions_lazy` manté un benefici mitjà pràcticament idèntic al de `generate_all_actions` tant per Hill Climbing com per Simulated Annealing; les petites diferències observades són numèricament molt menors que l’escala del problema i no alteren la qualitat de les solucions.
+D'altra banda, $H_{1_b}$ **també es veu confirmada**, ja que `generate_actions_lazy` redueix de manera molt significativa el temps d’execució dels dos algorismes, especialment de Simulated Annealing, sense que això comporti una pèrdua apreciable de benefici. Per tant, el generador lazy ofereix un millor compromís entre cost computacional i qualitat de la solució.
+
+<div class="page-break"></div>
+
+## 6. Conclusions generals
+
+Al llarg d’aquesta pràctica s’ha pogut experimentar de primera mà què implica abordar un problema de logística de combustible amb tècniques de cerca local, des de la definició de la representació de l’estat fins a la incorporació de totes les restriccions operatives rellevants.  Aquest procés ha posat de manifest fins a quin punt és crític decidir com es modelen els camions, els viatges i les peticions, ja que una bona definició de l’estructura de dades i de les limitacions condiciona directament la qualitat i la viabilitat de les solucions que es poden obtenir.
+
+Els experiments han mostrat que tant l’estratègia d’inicialització com els operadors de veïnat tenen un paper clau en el rendiment dels algorismes, i que decisions aparentment petites (per exemple, començar des d’una solució buida, ordenada o greedy) poden traduir-se en diferències clares de benefici i temps d’execució.  S’ha observat que Hill Climbing és especialment competitiu quan es parteix d’un bon punt inicial, mentre que Simulated Annealing resulta més robust quan el paisatge de la funció objectiu és més complicat o quan el punt de partida és més pobre, cosa que ha permès justificar l’elecció d’una configuració concreta d’inicialització, operadors i algorisme com a combinació recomanable per al problema estudiat.  En resum, ens quedem amb una inicialització de tipus greedy, l’ús de l’operador ``mourePeticio`` com a operador principal de veïnat i Simulated Annealing com a algorisme base, ja que ofereixen un bon compromís entre benefici, temps d’execució i simplicitat d’implementació en les instàncies considerades.
+
+Finalment, la variació sistemàtica dels paràmetres logístics (nombre de centres i camions, horari de treball, cost per quilòmetre, penalitzacions per peticions pendents) ha ajudat a entendre millor la sensibilitat del sistema: s’ha vist, per exemple, com l’augment del cost/km fa que deixin de servir-se peticions llunyanes i el benefici caigui ràpidament, o com arriba un punt en què afegir més recursos ja aporta rendiments decreixents.  En conjunt, la pràctica ha servit no només per assolir els objectius proposats (disseny de la representació, definició de la funció heurística, anàlisi d’operadors i algorismes, i estudis d’escalabilitat i sensibilitat), sinó també per constatar que el model, tot i simplificar aspectes com els costos fixos dels centres o la variabilitat real de la demanda, és fàcilment extensible a escenaris més complexos i té un potencial clar per transferir-se a casos reals de planificació i distribució logística.

@@ -4,6 +4,18 @@ Aquest projecte correspon a la **Pràctica de Búsqueda Local** de l’assignatu
 
 ## 🧠 Objectius
 
+L'objectiu principal d'aquest treball és resoldre un problema de distribució logística de combustible mitjançant algorismes de cerca local, implementant i avaluant tots els components necessaris per obtenir solucions òptimes en termes de benefici econòmic i eficiència operativa. En concret, els objectius específics són:
+
+1. **Dissenyar i implementar la representació del problema**, definint una estructura de dades eficient per a l'estat que tingui en compte les restriccions de capacitat, distància i nombre de viatges dels vehicles.
+
+2. **Desenvolupar estratègies de generació de solucions inicials i operadors de transformació**, implementant múltiples alternatives per a la inicialització i definint un conjunt d'operadors que permetin explorar eficientment l'espai de solucions.
+
+3. **Definir i justificar funcions heurístiques** que permetin avaluar la qualitat de les solucions considerant ingressos, costos de desplaçament i penalitzacions per peticions pendents, analitzant el seu impacte en la cerca.
+
+4. **Experimentar amb els algorismes Hill Climbing i Simulated Annealing**, comparant el rendiment dels diferents components implementats (solució inicial, operadors, heurística) i ajustant els paràmetres per obtenir solucions òptimes.
+
+5. **Analitzar l'escalabilitat i la sensibilitat del sistema** davant variacions en els paràmetres operatius (nombre de centres, camions, cost per km, horari de treball), extraient conclusions rellevants per a futures aplicacions pràctiques.
+
 ---
 
 ## 🧩 Descripció del problema
@@ -55,6 +67,7 @@ Per instal·lar totes les dependències necessàries:
 ```bash
 pip install numpy matplotlib pandas aima3
 ```
+
 ---
 
 ## 🚀 Ús

@@ -6,9 +6,7 @@ from implementacio.abia_Gasolina import Gasolineres, CentresDistribucio
 import time
 
 
-# ========================================================================
-# EXPERIMENT 1: 5 centres, 10 camions (multiplicitat=2), 100 gasolineres
-# ========================================================================
+# cas 1: 5 centres, 10 camions, 100 gasolineres
 
 # Acumuladors per les mitjanes
 benefici_total = 0
@@ -104,11 +102,7 @@ print("="*70)
 print()
 
 
-# ========================================================================
-# EXPERIMENT 2: 10 centres, 10 camions (multiplicitat=1), 100 gasolineres
-# ========================================================================
-
-# Acumuladors per les mitjanes
+# cas 2: 10 centres, 10 camions, 100 gasolineres
 benefici_total = 0
 ingressos_total = 0
 cost_km_total = 0
